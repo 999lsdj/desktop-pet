@@ -23,6 +23,9 @@ public final class BodyRig {
     private static final int STAFF_H = 118;
     private static final double GRIP_X = 19;
     private static final double GRIP_Y = 66;
+    /** 提灯杆的落地点，放下时绕它旋转，才会像立在地上 */
+    private static final double STAFF_FOOT_X = 17;
+    private static final double STAFF_FOOT_Y = 121;
 
     /** 两条小腿的区域与髋部枢轴 */
     private static final int LEG_Y = 88;
@@ -126,6 +129,11 @@ public final class BodyRig {
     /** 提灯部件握点在原生坐标里的位置 */
     public Point.Double grip() {
         return new Point.Double(GRIP_X, GRIP_Y);
+    }
+
+    /** 提灯杆底部在原生坐标里的落地点 */
+    public Point.Double staffFoot() {
+        return new Point.Double(STAFF_FOOT_X, STAFF_FOOT_Y);
     }
 
     /** 第 index 条腿的髋部枢轴（原生坐标） */
