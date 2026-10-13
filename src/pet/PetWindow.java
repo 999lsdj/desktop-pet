@@ -3,7 +3,6 @@ package pet;
 import javax.swing.JWindow;
 import javax.swing.Timer;
 import java.awt.AlphaComposite;
-import java.awt.BasicStroke;
 import java.awt.Color;
 import java.awt.Cursor;
 import java.awt.Dimension;
@@ -40,7 +39,9 @@ import java.nio.file.Paths;
 public final class PetWindow extends JWindow {
 
     /** 三角形菜单外接圆半径（逻辑像素，会按系统 DPI 换算成设备像素） */
-    static final int MENU_RADIUS_LOGICAL = 110;
+    static final int MENU_RADIUS_LOGICAL = 80;
+    /** 三角形底边与角色头顶之间的空隙（逻辑像素） */
+    static final int MENU_GAP_LOGICAL = 5;
     /** 单个按钮直径（逻辑像素） */
     static final int BUTTON_DIAMETER_LOGICAL = 56;
     /** 精灵放大倍数（设备像素 / 精灵像素） */
@@ -53,12 +54,21 @@ public final class PetWindow extends JWindow {
     private static final String[] BUTTON_NAMES = {"计划表", "常用文件", "视频网站"};
     private static final PixelIcon[] BUTTON_ICONS =
             {PixelIcon.PLAN, PixelIcon.FILES, PixelIcon.VIDEO};
-    /** 三个按钮在三角形上的角度（度，0 度向右，顺时针为正）；三点间隔 120 度 */
-    private static final double[] BUTTON_ANGLES = {-150, -30, 90};
+    /**
+     * 三个按钮相对菜单圆心的距离（逻辑像素）。顶端那个比底边两个近，
+     * 三角形因此压扁，整体更贴合角色头部，不会高高悬在头顶。
+     */
+    private static final double[] BUTTON_DISTANCE_LOGICAL = {45, 80, 80};
+    /**
+     * 三个按钮在三角形上的角度（度，0 度向右，顺时针为正），三点间隔 120 度。
+     * 尖朝上，整体落在角色头顶上方，不遮挡角色。
+     */
+    private static final double[] BUTTON_ANGLES = {-90, 30, 150};
 
     private final double dpiScale;
     private final int menuRadius;
     private final int buttonDiameter;
+    private final double[] buttonDistance;
     private final int fontSize;
 
     private final Sprite sprite;
@@ -88,20 +98,31 @@ public final class PetWindow extends JWindow {
         menuRadius = (int) Math.round(MENU_RADIUS_LOGICAL * dpiScale);
         buttonDiameter = (int) Math.round(BUTTON_DIAMETER_LOGICAL * dpiScale);
         fontSize = (int) Math.round(13 * dpiScale);
+        buttonDistance = new double[BUTTON_DISTANCE_LOGICAL.length];
+        for (int i = 0; i < BUTTON_DISTANCE_LOGICAL.length; i++) {
+            buttonDistance[i] = BUTTON_DISTANCE_LOGICAL[i] * dpiScale;
+        }
 
-        Path spritePath = Paths.get("assets", "sprites", "pet-base-132x154.png").toAbsolutePath();
+        Path spritePath = Paths.get("assets", "sprites", "pet-base.png").toAbsolutePath();
         sprite = Sprite.load(spritePath, SPRITE_SCALE);
         Log.info("精灵图加载完成: " + spritePath + " -> " + sprite.width() + "x" + sprite.height());
 
-        int menuExtent = 2 * (menuRadius + buttonDiameter / 2 + 10);
-        int width = Math.max(sprite.width(), menuExtent) + MARGIN * 2;
-        int height = Math.max(sprite.height(), menuExtent) + MARGIN * 2;
+        // 布局：菜单三角形完全落在角色头顶上方，角色下方留一条气泡带
+        int radius = buttonDiameter / 2;
+        int gap = (int) Math.round(MENU_GAP_LOGICAL * dpiScale);
+        double apexDistance = BUTTON_DISTANCE_LOGICAL[0] * dpiScale;
+        int topSpace = (int) Math.round(apexDistance + 0.5 * menuRadius) + 2 * radius + gap + MARGIN;
+        int halfWidth = (int) Math.round(menuRadius * 0.866) + radius + MARGIN;
+        int bubbleSpace = (int) Math.round(46 * dpiScale);
+
+        int width = Math.max(sprite.width() + MARGIN * 2, halfWidth * 2);
+        int height = topSpace + sprite.height() + bubbleSpace + MARGIN;
 
         spriteX = (width - sprite.width()) / 2;
-        spriteY = (height - sprite.height()) / 2;
+        spriteY = topSpace;
         centerX = spriteX + sprite.width() / 2;
-        // 菜单圆心略高于身体中心：两个按钮在头部两侧，一个落在脚下，三角形读起来更自然
-        centerY = spriteY + (int) Math.round(sprite.height() * 0.36);
+        // 三角形底边两个按钮的下缘正好停在角色头顶上方 gap 像素处
+        centerY = spriteY - gap - radius - (int) Math.round(0.5 * menuRadius);
         characterShape = sprite.silhouette(spriteX, spriteY, 24);
 
         setBackground(new Color(0, 0, 0, 0));
@@ -147,7 +168,8 @@ public final class PetWindow extends JWindow {
         try {
             java.awt.Robot robot = new java.awt.Robot();
             int tx = getX() + centerX;
-            int ty = getY() + centerY + (int) Math.round(60 * dpiScale);
+            // 点在角色身上（身体中部），而不是菜单圆心
+            int ty = getY() + spriteY + sprite.height() / 2;
             Log.info("自检：把鼠标移到 (" + tx + "," + ty + ") 并点击角色");
             robot.mouseMove(tx, ty);
             robot.delay(200);
@@ -319,7 +341,7 @@ public final class PetWindow extends JWindow {
 
     private Point buttonCenter(int index) {
         double rad = Math.toRadians(BUTTON_ANGLES[index]);
-        double r = menuRadius * progress;
+        double r = buttonDistance[index] * progress;
         return new Point(
                 (int) Math.round(centerX + Math.cos(rad) * r),
                 (int) Math.round(centerY + Math.sin(rad) * r));
@@ -364,9 +386,6 @@ public final class PetWindow extends JWindow {
                 }
             }
 
-            if (hoverIndex >= 0 && progress > 0.9) {
-                drawHoverLabel(g, hoverIndex);
-            }
             if (bubble != null) {
                 drawBubble(g);
             }
@@ -384,38 +403,18 @@ public final class PetWindow extends JWindow {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
 
-        g2.setColor(new Color(0, 0, 0, 60));
-        g2.fill(new Ellipse2D.Double(c.x - drawD / 2 + 2, c.y - drawD / 2 + 3, drawD, drawD));
-        g2.setColor(new Color(0xF4F7FF));
+        // 用两层柔和投影代替描边：浅色背景上也能看出是个浮起的圆盘，但不会出现黑边
+        g2.setColor(new Color(30, 40, 70, 26));
+        g2.fill(new Ellipse2D.Double(c.x - drawD / 2 - 1, c.y - drawD / 2, drawD + 2, drawD + 3));
+        g2.setColor(new Color(30, 40, 70, 52));
+        g2.fill(new Ellipse2D.Double(c.x - drawD / 2 + 1, c.y - drawD / 2 + 3, drawD, drawD));
+        g2.setColor(new Color(0xF7FAFF));
         g2.fill(new Ellipse2D.Double(c.x - drawD / 2, c.y - drawD / 2, drawD, drawD));
-        g2.setColor(new Color(0x23263A));
-        g2.setStroke(new BasicStroke((float) Math.max(2.0, dpiScale * 2)));
-        g2.draw(new Ellipse2D.Double(c.x - drawD / 2, c.y - drawD / 2, drawD, drawD));
 
         double iconSize = drawD * 0.56;
         double cell = iconSize / 16.0;
         BUTTON_ICONS[index].render(g2, c.x - iconSize / 2, c.y - iconSize / 2, cell);
         g2.dispose();
-    }
-
-    private void drawHoverLabel(Graphics2D g, int index) {
-        Point c = buttonCenter(index);
-        String text = BUTTON_NAMES[index];
-        g.setFont(new Font("Microsoft YaHei", Font.PLAIN, fontSize));
-        FontMetrics fm = g.getFontMetrics();
-        int padX = (int) Math.round(10 * dpiScale);
-        int w = fm.stringWidth(text) + padX * 2;
-        int h = fm.getHeight() + (int) Math.round(6 * dpiScale);
-        double d = buttonDiameter();
-
-        double rad = Math.toRadians(BUTTON_ANGLES[index]);
-        int lx = (int) Math.round(c.x + Math.cos(rad) * (d / 2 + 10 * dpiScale) - w / 2);
-        int ly = (int) Math.round(c.y + Math.sin(rad) * (d / 2 + 10 * dpiScale) - h / 2);
-
-        g.setColor(new Color(0x23263A));
-        g.fill(new RoundRectangle2D.Double(lx, ly, w, h, 10, 10));
-        g.setColor(new Color(0xF7F9FF));
-        g.drawString(text, lx + padX, ly + (h - fm.getHeight()) / 2 + fm.getAscent());
     }
 
     private void drawBubble(Graphics2D g) {
@@ -425,9 +424,10 @@ public final class PetWindow extends JWindow {
         int w = fm.stringWidth(bubble) + padX * 2;
         int h = fm.getHeight() + (int) Math.round(8 * dpiScale);
         int x = centerX - w / 2;
-        int y = spriteY - h - (int) Math.round(10 * dpiScale);
-        if (y < 4) {
-            y = 4;
+        // 气泡画在角色脚下，避免和头顶的三角形菜单打架
+        int y = spriteY + sprite.height() + (int) Math.round(6 * dpiScale);
+        if (y + h > getHeight() - 2) {
+            y = getHeight() - h - 2;
         }
         g.setColor(new Color(0x23263A));
         g.fill(new RoundRectangle2D.Double(x, y, w, h, 12, 12));
