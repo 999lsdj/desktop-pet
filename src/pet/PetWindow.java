@@ -25,134 +25,192 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseMotionAdapter;
 import java.awt.geom.Area;
 import java.awt.geom.Ellipse2D;
+import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Random;
 
 /**
- * 桌宠主窗口：透明置顶、按角色轮廓裁剪、点击角色展开三角形菜单。
+ * 桌宠主窗口：透明置顶、沿屏幕底边踱步、微醺摇晃、提灯单摆、躺下休息、点击摊手开菜单。
  *
- * 第一步只实现交互外壳：窗口显示、拖动、点击展开三角形菜单、按钮占位反馈、右键退出。
- * 渲染统一在设备像素空间进行（启动时加 -Dsun.java2d.uiScale=1），
- * 这样精灵图按整数倍最近邻放大，125% 缩放下也不会被插值糊掉。
+ * 绘制统一在设备像素空间进行（启动加 -Dsun.java2d.uiScale=1），
+ * 精灵按整数倍最近邻放大，因此像素边缘不会被插值糊掉。
  */
 public final class PetWindow extends JWindow {
 
-    /** 三角形菜单外接圆半径（逻辑像素，会按系统 DPI 换算成设备像素） */
-    static final int MENU_RADIUS_LOGICAL = 80;
-    /** 三角形底边与角色头顶之间的空隙（逻辑像素） */
-    static final int MENU_GAP_LOGICAL = 5;
-    /** 单个按钮直径（逻辑像素） */
-    static final int BUTTON_DIAMETER_LOGICAL = 56;
-    /** 精灵放大倍数（设备像素 / 精灵像素） */
-    static final int SPRITE_SCALE = 2;
-    /** 展开/收起动画时长（毫秒） */
-    static final int ANIM_MS = 150;
-    /** 画布留白，保证三角形菜单不被窗口裁掉 */
-    static final int MARGIN = 16;
+    private enum State { WALK, PAUSE, REST, MENU, HIDDEN }
 
+    /** 设备像素 / 原生像素 */
+    static final int SPRITE_SCALE = 2;
+    /** 脚下留白，给影子用 */
+    private static final int GROUND_PAD = 12;
+    /**
+     * 休息时身体倾斜的角度。
+     * 整身硬转到水平会被大衣、长发和长杖拖成一团乱麻（试过 72 度，观感很差），
+     * 所以改成"靠着打盹"：小幅后仰 + 放缓呼吸 + 头顶冒 Z 字。
+     * 想要真正的躺姿，需要一张躺下的立绘。
+     */
+    private static final double LIE_ANGLE = 22;
+    /** 菜单三个按钮在圆周上的角度（以胸口为圆心，向斜上方展开成扇形） */
+    private static final double[] MENU_ANGLES = {200, 270, 340};
     private static final String[] BUTTON_NAMES = {"计划表", "常用文件", "视频网站"};
     private static final PixelIcon[] BUTTON_ICONS =
             {PixelIcon.PLAN, PixelIcon.FILES, PixelIcon.VIDEO};
-    /**
-     * 三个按钮相对菜单圆心的距离（逻辑像素）。顶端那个比底边两个近，
-     * 三角形因此压扁，整体更贴合角色头部，不会高高悬在头顶。
-     */
-    private static final double[] BUTTON_DISTANCE_LOGICAL = {45, 80, 80};
-    /**
-     * 三个按钮在三角形上的角度（度，0 度向右，顺时针为正），三点间隔 120 度。
-     * 尖朝上，整体落在角色头顶上方，不遮挡角色。
-     */
-    private static final double[] BUTTON_ANGLES = {-90, 30, 150};
+
+    private final Config config;
+    private final boolean still;
+    private final BodyRig rig;
+    private final Random random = new Random();
+    private final FullscreenWatcher watcher;
+    private final Pendulum pendulum;
 
     private final double dpiScale;
+    private final int spriteW;
+    private final int spriteH;
+    private final int windowW;
+    private final int windowH;
+    private final int groundX;
+    private final int groundY;
+    private final int chestY;
     private final int menuRadius;
     private final int buttonDiameter;
-    private final double[] buttonDistance;
     private final int fontSize;
+    private final double walkSpeed;          // 设备像素/秒
+    private final Shape idleShape;
+    private final Shape restShape;
 
-    private final Sprite sprite;
-    private final int spriteX;
-    private final int spriteY;
-    private final int centerX;
-    private final int centerY;
-    private final Shape characterShape;
-
-    private boolean menuOpen;
-    private double progress;
-    private long animStart;
-    private boolean animating;
+    // 运动状态
+    private State state = State.PAUSE;
+    private double posX;
+    private double groundLine;
+    private double dir = 1;
+    private boolean mirrored;
+    private long now;
+    private long stateUntil;
+    private long nextWalkEnd;
+    private long nextRestAt;
+    private long nextStumbleAt;
+    private long stumbleUntil;
+    private double walkPhase;
+    private double lieAmount;
+    private boolean pendingMenu;
+    private double menuProgress;
+    private long menuAnimStart;
+    private boolean menuAnimating;
     private int hoverIndex = -1;
+    private boolean hoverBody;
+    private double speedFactor = 1.0;
     private String bubble;
     private long bubbleUntil;
+
+    // 单摆驱动用的握手位置历史
+    private double gripPrevX;
+    private double gripVel;
 
     private Point pressScreen;
     private Point pressWindow;
     private boolean dragging;
 
-    public PetWindow(boolean demoMode) throws Exception {
-        super();
+    public PetWindow(Config config, boolean demoMode, boolean selfTest, boolean restTest,
+                     boolean ignoreFullscreen) throws Exception {
+        this(config, demoMode, selfTest, restTest, ignoreFullscreen, false);
+    }
 
-        // 设备像素空间：屏幕分辨率就是真实分辨率，1 单位 = 1 物理像素
+    public PetWindow(Config config, boolean demoMode, boolean selfTest, boolean restTest,
+                     boolean ignoreFullscreen, boolean still) throws Exception {
+        super();
+        this.config = config;
+        this.still = still;
+
         dpiScale = Math.max(1.0, Toolkit.getDefaultToolkit().getScreenResolution() / 96.0);
-        menuRadius = (int) Math.round(MENU_RADIUS_LOGICAL * dpiScale);
-        buttonDiameter = (int) Math.round(BUTTON_DIAMETER_LOGICAL * dpiScale);
+        menuRadius = (int) Math.round(config.d("menu.radius.logical", 105) * dpiScale);
+        buttonDiameter = (int) Math.round(config.d("button.diameter.logical", 56) * dpiScale);
         fontSize = (int) Math.round(13 * dpiScale);
-        buttonDistance = new double[BUTTON_DISTANCE_LOGICAL.length];
-        for (int i = 0; i < BUTTON_DISTANCE_LOGICAL.length; i++) {
-            buttonDistance[i] = BUTTON_DISTANCE_LOGICAL[i] * dpiScale;
-        }
+        walkSpeed = config.d("walk.speed.logical", 30) * dpiScale;
 
         Path spritePath = Paths.get("assets", "sprites", "pet-base.png").toAbsolutePath();
-        sprite = Sprite.load(spritePath, SPRITE_SCALE);
-        Log.info("精灵图加载完成: " + spritePath + " -> " + sprite.width() + "x" + sprite.height());
+        rig = BodyRig.load(spritePath);
+        spriteW = rig.width() * SPRITE_SCALE;
+        spriteH = rig.height() * SPRITE_SCALE;
 
-        // 布局：菜单三角形完全落在角色头顶上方，角色下方留一条气泡带
-        int radius = buttonDiameter / 2;
-        int gap = (int) Math.round(MENU_GAP_LOGICAL * dpiScale);
-        double apexDistance = BUTTON_DISTANCE_LOGICAL[0] * dpiScale;
-        int topSpace = (int) Math.round(apexDistance + 0.5 * menuRadius) + 2 * radius + gap + MARGIN;
-        int halfWidth = (int) Math.round(menuRadius * 0.866) + radius + MARGIN;
-        int bubbleSpace = (int) Math.round(46 * dpiScale);
+        int headroom = menuRadius + buttonDiameter / 2 + (int) Math.round(14 * dpiScale);
+        windowH = headroom + spriteH + GROUND_PAD;
+        // 躺下时身体从脚下向右侧伸出（头朝右），窗口右侧必须留出这段长度，否则会被裁掉。
+        double lie = Math.toRadians(LIE_ANGLE);
+        int rightRoom = (int) Math.ceil(spriteH * Math.sin(lie) + spriteW / 2.0 * Math.cos(lie))
+                + (int) Math.round(20 * dpiScale);
+        int leftRoom = (int) Math.ceil(Math.max(spriteW / 2.0,
+                menuRadius * Math.cos(Math.toRadians(20)) + buttonDiameter / 2.0))
+                + (int) Math.round(20 * dpiScale);
+        groundX = leftRoom;
+        windowW = groundX + rightRoom;
+        groundY = headroom + spriteH;
+        chestY = groundY - (int) Math.round(spriteH * 0.58);
+        groundLine = Toolkit.getDefaultToolkit().getScreenSize().height;
 
-        int width = Math.max(sprite.width() + MARGIN * 2, halfWidth * 2);
-        int height = topSpace + sprite.height() + bubbleSpace + MARGIN;
+        idleShape = buildIdleShape();
+        // 躺下时的可点击范围：从脚下往右铺开
+        restShape = new Rectangle2D.Double(groundX - spriteW * 0.35, groundY - spriteH * 0.45,
+                spriteH * 1.25, spriteH * 0.5);
 
-        spriteX = (width - sprite.width()) / 2;
-        spriteY = topSpace;
-        centerX = spriteX + sprite.width() / 2;
-        // 三角形底边两个按钮的下缘正好停在角色头顶上方 gap 像素处
-        centerY = spriteY - gap - radius - (int) Math.round(0.5 * menuRadius);
-        characterShape = sprite.silhouette(spriteX, spriteY, 24);
+        pendulum = new Pendulum(
+                config.d("lantern.max.deg", 35),
+                config.d("lantern.length.device", 90),
+                config.d("lantern.damping", 1.1));
 
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
-        setSize(new Dimension(width, height));
-        placeInitially(width, height);
-
-        if (!GraphicsEnvironment.isHeadless()) {
-            try {
-                setShape(characterShape);
-            } catch (Exception e) {
-                Log.error("窗口裁剪失败（不影响显示）", e);
-            }
+        setSize(new Dimension(windowW, windowH));
+        placeInitially();
+        try {
+            setShape(idleShape);
+        } catch (Exception e) {
+            Log.error("窗口裁剪失败（不影响显示）", e);
         }
 
         PetPanel panel = new PetPanel();
         panel.setOpaque(false);
         setContentPane(panel);
-
         installMouseHandlers(panel);
         installPopupMenu(panel);
         installTrayIcon();
 
-        Timer timer = new Timer(16, e -> onTick());
-        timer.start();
+        watcher = ignoreFullscreen
+                ? FullscreenWatcher.disabled()
+                : new FullscreenWatcher(Paths.get("tools", "fullscreen-watch.ps1").toAbsolutePath(),
+                        "powershell.exe");
 
-        Log.info("窗口初始化完成: " + width + "x" + height
-                + " | DPI缩放=" + dpiScale
-                + " | 菜单半径=" + menuRadius + " 按钮直径=" + buttonDiameter
-                + " | 菜单圆心=(" + centerX + "," + centerY + ")");
+        long t = System.currentTimeMillis();
+        now = t;
+        stateUntil = t + 1200;
+        nextWalkEnd = t + 8000;
+        nextRestAt = t + (long) (config.d("rest.interval.min.minutes", 2) * 60000 * (0.6 + random.nextDouble() * 0.4));
+        nextStumbleAt = t + 15000;
+
+        new Timer(16, e -> onTick()).start();
+
+        Log.info("窗口初始化: " + windowW + "x" + windowH + " | DPI=" + dpiScale
+                + " | 精灵=" + rig.width() + "x" + rig.height() + " 显示=" + spriteW + "x" + spriteH
+                + " | 地面=(" + groundX + "," + groundY + ") 胸口Y=" + chestY
+                + " | 菜单半径=" + menuRadius + " 按钮=" + buttonDiameter
+                + " | 走路速度=" + String.format("%.1f", walkSpeed) + " 设备像素/秒");
+
+        if (demoMode) {
+            javax.swing.Timer t2 = new javax.swing.Timer(1500, e -> openMenu(true));
+            t2.setRepeats(false);
+            t2.start();
+        }
+        if (selfTest) {
+            javax.swing.Timer t2 = new javax.swing.Timer(2000, e -> selfTestClick());
+            t2.setRepeats(false);
+            t2.start();
+        }
+        if (restTest) {
+            javax.swing.Timer t2 = new javax.swing.Timer(1200, e -> enterRest());
+            t2.setRepeats(false);
+            t2.start();
+        }
     }
 
     public void open() {
@@ -160,39 +218,296 @@ public final class PetWindow extends JWindow {
         Log.info("桌宠已显示");
     }
 
-    /**
-     * 自检：用真实鼠标事件点击角色本体，验证"点击展开三角形菜单"这条路是通的
-     * （而不是只验证 demo 模式直接调用的 toggleMenu）。
-     */
-    public void selfTestClick() {
-        try {
-            java.awt.Robot robot = new java.awt.Robot();
-            int tx = getX() + centerX;
-            // 点在角色身上（身体中部），而不是菜单圆心
-            int ty = getY() + spriteY + sprite.height() / 2;
-            Log.info("自检：把鼠标移到 (" + tx + "," + ty + ") 并点击角色");
-            robot.mouseMove(tx, ty);
-            robot.delay(200);
-            robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
-            robot.delay(60);
-            robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
-            Log.info("自检：点击完成，当前菜单状态=" + (menuOpen ? "展开" : "收起"));
-        } catch (Exception e) {
-            Log.error("自检点击失败", e);
+    private void placeInitially() {
+        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+        posX = screen.width - windowW - 80;
+        groundLine = screen.height;
+        setLocation((int) Math.round(posX), (int) Math.round(groundLine) - groundY);
+        Log.info("初始位置: x=" + getX() + " y=" + getY() + " | 屏幕=" + screen.width + "x" + screen.height);
+    }
+
+    // ------------------------------------------------------------- 状态机
+
+    private void onTick() {
+        long previous = now;
+        now = System.currentTimeMillis();
+        double dt = Math.min(0.05, Math.max(0.001, (now - previous) / 1000.0));
+
+        boolean fullscreen = watcher.isFullscreen();
+        if (fullscreen && state != State.HIDDEN) {
+            state = State.HIDDEN;
+            setOpacity(0.15f);
+        } else if (!fullscreen && state == State.HIDDEN) {
+            setOpacity(1.0f);
+            state = State.PAUSE;
+            stateUntil = now + 1000;
+        }
+
+        if (state != State.HIDDEN) {
+            updateState(dt);
+            updateMotion(dt);
+        } else {
+            repaint();
+        }
+        if (bubble != null && now > bubbleUntil) {
+            bubble = null;
         }
     }
 
-    private void placeInitially(int width, int height) {
-        Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
-        int x = screen.width - width - 60;
-        int y = screen.height - height - 100;
-        x = Math.max(0, Math.min(x, screen.width - width));
-        y = Math.max(0, Math.min(y, screen.height - height));
-        setLocation(x, y);
-        Log.info("初始位置: (" + getX() + "," + getY() + ") | 屏幕=" + screen.width + "x" + screen.height);
+    private void updateState(double dt) {
+        updateGround(dt);
+        switch (state) {
+            case WALK -> {
+                posX += dir * walkSpeed * speedFactor * dt;
+                walkPhase += dt * 7.0 * speedFactor;
+                Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
+                if (posX < 0) {
+                    posX = 0;
+                    turn();
+                } else if (posX > screen.width - windowW) {
+                    posX = screen.width - windowW;
+                    turn();
+                }
+                setLocation((int) Math.round(posX), getY());
+                if (now > nextWalkEnd) {
+                    enterPause();
+                }
+            }
+            case PAUSE -> {
+                if (now > stateUntil) {
+                    enterWalk();
+                }
+            }
+            case REST -> {
+                lieAmount = Math.min(1.0, lieAmount + dt / 0.9);
+                pendulum.setDamping(config.d("lantern.damping", 1.1) * 3.2);
+                if (now > stateUntil && lieAmount > 0.98) {
+                    wakeUp(false);
+                }
+            }
+            case MENU -> {
+                lieAmount = Math.max(0.0, lieAmount - dt / 0.9);
+            }
+            default -> {
+            }
+        }
+
+        if (pendingMenu && lieAmount < 0.02) {
+            pendingMenu = false;
+            openMenu(true);
+        }
+
+        if ((state == State.WALK || state == State.PAUSE) && now > nextRestAt) {
+            enterRest();
+        }
+        if (now > nextStumbleAt && state != State.REST) {
+            stumbleUntil = now + 500;
+            nextStumbleAt = now + randSeconds("stumble.interval.min.sec", 20,
+                    "stumble.interval.max.sec", 40) * 1000L;
+            pendulum.kick(1.6 * (random.nextBoolean() ? 1 : -1));
+            Log.info("踉跄一下");
+        }
+
+        if (menuAnimating) {
+            double t = Math.min(1.0, (now - menuAnimStart) / 180.0);
+            menuProgress = menuProgress > 0.5 ? ease(t) : 1 - ease(t);
+            if (t >= 1.0) {
+                menuProgress = menuProgress > 0.5 ? 1 : 0;
+                menuAnimating = false;
+            }
+            applyShape();
+        }
     }
 
-    // ---------------------------------------------------------------- 交互
+    /** 让地面线平滑跟随任务栏：任务栏弹出时她抬脚站上去，收起时再落回屏幕底边。 */
+    private void updateGround(double dt) {
+        int target = watcher.groundY();
+        if (target < 0) {
+            return;
+        }
+        if (Math.abs(groundLine - target) < 0.5) {
+            groundLine = target;
+        } else {
+            groundLine += (target - groundLine) * Math.min(1.0, dt * 6);
+        }
+        setLocation(getX(), (int) Math.round(groundLine) - groundY);
+    }
+
+    private void updateMotion(double dt) {
+        double swayTilt = config.d("sway.tilt.deg", 8)
+                * Math.sin(2 * Math.PI * now / 1000.0 / config.d("sway.period.sec", 1.5))
+                * (1 - 0.7 * lieAmount);
+        double stumble = 0;
+        if (now < stumbleUntil) {
+            stumble = config.d("stumble.tilt.deg", 15) * Math.sin(Math.PI * (1 - (stumbleUntil - now) / 500.0));
+        }
+        double bodyAngle = swayTilt + stumble + lieAmount * LIE_ANGLE;
+
+        double bob = Math.sin(2 * Math.PI * now / 1000.0 / config.d("sway.period.sec", 1.5) * 2)
+                * config.d("bob.device.px", 4) * (0.6 + 0.4 * (state == State.WALK ? 1 : 0));
+
+        // 握点的世界坐标 → 用它算出水平加速度去驱动单摆
+        double gripLocalX = (rig.grip().x - rig.width() / 2.0) * SPRITE_SCALE;
+        double gripLocalY = (rig.grip().y - rig.height()) * SPRITE_SCALE;
+        double rad = Math.toRadians(bodyAngle);
+        double gripWorldX = getX() + groundX + gripLocalX * Math.cos(rad) - gripLocalY * Math.sin(rad);
+        double vel = (gripWorldX - gripPrevX) / dt;
+        double accel = (vel - gripVel) / dt;
+        gripPrevX = gripWorldX;
+        gripVel = vel;
+        if (state == State.MENU || state == State.REST) {
+            pendulum.setDamping(config.d("lantern.damping", 1.1) * (state == State.REST ? 3.2 : 1.6));
+        } else {
+            pendulum.setDamping(config.d("lantern.damping", 1.1));
+        }
+        pendulum.update(dt, accel, 900);
+
+        repaint();
+    }
+
+    private void turn() {
+        dir = -dir;
+        mirrored = !mirrored;
+        pendulum.kick(1.2 * dir);
+    }
+
+    private void enterWalk() {
+        if (still) {
+            state = State.PAUSE;
+            stateUntil = now + 600000;
+            return;
+        }
+        state = State.WALK;
+        walkPhase = 0;
+        nextWalkEnd = now + randSeconds("walk.stretch.min.sec", 8, "walk.stretch.max.sec", 20) * 1000L;
+        pendulum.kick(1.4);
+        Log.info("开始踱步（" + (dir > 0 ? "向右" : "向左") + "）");
+    }
+
+    private void enterPause() {
+        state = State.PAUSE;
+        stateUntil = now + randSeconds("walk.pause.min.sec", 3, "walk.pause.max.sec", 10) * 1000L;
+        pendulum.kick(-1.0);
+        Log.info("停下歇一会");
+    }
+
+    private void enterRest() {
+        if (state == State.REST) {
+            return;
+        }
+        state = State.REST;
+        stateUntil = now + randSeconds("rest.duration.min.sec", 20, "rest.duration.max.sec", 60) * 1000L;
+        nextRestAt = now + randSeconds("rest.interval.min.minutes", 2, "rest.interval.max.minutes", 5) * 60000L;
+        pendulum.kick(-1.5);
+        Log.info("躺下休息");
+    }
+
+    private void wakeUp(boolean immediate) {
+        state = State.PAUSE;
+        stateUntil = now + (immediate ? 200 : 800);
+        pendulum.setDamping(config.d("lantern.damping", 1.1));
+        Log.info("起身");
+    }
+
+    private void openMenu(boolean open) {
+        if (open) {
+            state = State.MENU;
+            menuAnimStart = now;
+            menuAnimating = true;
+            menuProgress = 0.001;
+            Log.info("停下，摊开手展示任务入口");
+        } else {
+            menuAnimStart = now;
+            menuAnimating = true;
+            Log.info("收起任务入口，继续踱步");
+            state = State.PAUSE;
+            stateUntil = now + 1500;
+        }
+        applyShape();
+    }
+
+    private long randSeconds(String minKey, double minDefault, String maxKey, double maxDefault) {
+        double lo = config.d(minKey, minDefault);
+        double hi = config.d(maxKey, maxDefault);
+        if (hi < lo) {
+            hi = lo;
+        }
+        return Math.round(lo + random.nextDouble() * (hi - lo));
+    }
+
+    private static double ease(double t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+
+    // ------------------------------------------------------------- 形状
+
+    private Shape buildIdleShape() {
+        Area area = new Area();
+        java.awt.image.BufferedImage full = rig.original();
+        int w = full.getWidth();
+        int h = full.getHeight();
+        int halo = (int) Math.round(4 * dpiScale);
+        for (int y = 0; y < h; y++) {
+            for (int x = 0; x < w; x++) {
+                if ((full.getRGB(x, y) >>> 24) > 8) {
+                    area.add(new Area(new Rectangle2D.Double(
+                            groundX - spriteW / 2.0 + x * SPRITE_SCALE - halo,
+                            groundY - spriteH + y * SPRITE_SCALE - halo,
+                            SPRITE_SCALE + halo * 2, SPRITE_SCALE + halo * 2)));
+                }
+            }
+        }
+        return area;
+    }
+
+    private void applyShape() {
+        Area area = new Area(lieAmount > 0.15 ? restShape : idleShape);
+        if (menuProgress > 0.02) {
+            for (int i = 0; i < MENU_ANGLES.length; i++) {
+                Point c = buttonCenter(i);
+                double d = buttonDiameter * (0.55 + 0.45 * menuProgress);
+                area.add(new Area(new Ellipse2D.Double(c.x - d / 2, c.y - d / 2, d, d)));
+            }
+        }
+        try {
+            setShape(area);
+        } catch (Exception e) {
+            Log.error("设置窗口形状失败", e);
+        }
+    }
+
+    private Point buttonCenter(int index) {
+        double rad = Math.toRadians(MENU_ANGLES[index]);
+        double r = menuRadius * menuProgress;
+        return new Point(
+                (int) Math.round(groundX + Math.cos(rad) * r),
+                (int) Math.round(chestY + Math.sin(rad) * r));
+    }
+
+    private int buttonAt(Point p) {
+        if (menuProgress < 0.75) {
+            return -1;
+        }
+        for (int i = 0; i < MENU_ANGLES.length; i++) {
+            Point c = buttonCenter(i);
+            if (Math.hypot(p.x - c.x, p.y - c.y) <= buttonDiameter * 0.6) {
+                return i;
+            }
+        }
+        return -1;
+    }
+
+    /** 点击命中角色本体（用宽松包围盒，躺下时换一条横着的） */
+    private boolean bodyAt(Point p) {
+        if (lieAmount > 0.5) {
+            return p.x > groundX - spriteW * 0.4 && p.x < groundX + spriteH * 1.1
+                    && p.y > groundY - spriteH * 0.45 && p.y < groundY + 6;
+        }
+        return Math.abs(p.x - groundX) < spriteW * 0.42
+                && p.y > groundY - spriteH + 6 && p.y < groundY + 6;
+    }
+
+    // ------------------------------------------------------------- 交互
 
     private void installMouseHandlers(PetPanel panel) {
         panel.addMouseListener(new MouseAdapter() {
@@ -212,10 +527,11 @@ public final class PetWindow extends JWindow {
                     return;
                 }
                 if (dragging) {
-                    Log.info("窗口移动到 (" + getX() + "," + getY() + ")");
                     dragging = false;
                     pressScreen = null;
                     setCursor(Cursor.getDefaultCursor());
+                    Log.info("拖到 (" + getX() + "," + getY() + ")");
+                    posX = getX();
                     return;
                 }
                 pressScreen = null;
@@ -229,10 +545,10 @@ public final class PetWindow extends JWindow {
                 if (pressScreen == null) {
                     return;
                 }
-                Point now = e.getLocationOnScreen();
-                int dx = now.x - pressScreen.x;
-                int dy = now.y - pressScreen.y;
-                if (!dragging && Math.abs(dx) + Math.abs(dy) > 4) {
+                Point p = e.getLocationOnScreen();
+                int dx = p.x - pressScreen.x;
+                int dy = p.y - pressScreen.y;
+                if (!dragging && Math.abs(dx) + Math.abs(dy) > 5) {
                     dragging = true;
                     setCursor(Cursor.getPredefinedCursor(Cursor.MOVE_CURSOR));
                 }
@@ -244,11 +560,13 @@ public final class PetWindow extends JWindow {
             @Override
             public void mouseMoved(MouseEvent e) {
                 int idx = buttonAt(e.getPoint());
-                if (idx != hoverIndex) {
+                boolean body = bodyAt(e.getPoint());
+                if (idx != hoverIndex || body != hoverBody) {
                     hoverIndex = idx;
+                    hoverBody = body;
                     repaint();
                 }
-                setCursor(idx >= 0
+                setCursor(idx >= 0 || body
                         ? Cursor.getPredefinedCursor(Cursor.HAND_CURSOR)
                         : Cursor.getDefaultCursor());
             }
@@ -256,116 +574,54 @@ public final class PetWindow extends JWindow {
     }
 
     private void handleClick(Point p) {
-        if (progress > 0.75) {
+        if (menuProgress > 0.75) {
             int idx = buttonAt(p);
             if (idx >= 0) {
-                onButton(idx);
+                Log.info("按钮点击: " + BUTTON_NAMES[idx] + "（待后续步骤实现）");
+                showBubble(BUTTON_NAMES[idx] + " · 待后续步骤实现");
+                openMenu(false);
                 return;
             }
         }
-        if (characterShape.contains(p)) {
-            toggleMenu(!menuOpen);
+        if (!bodyAt(p)) {
             return;
         }
-        if (menuOpen) {
-            toggleMenu(false);
+        if (state == State.MENU) {
+            openMenu(false);
+        } else if (state == State.REST || lieAmount > 0.1) {
+            wakeUp(true);
+            pendingMenu = true;
+            Log.info("被点醒，准备起身展示入口");
+        } else {
+            pendulum.kick(2.0);
+            openMenu(true);
         }
-    }
-
-    private void onButton(int index) {
-        Log.info("按钮点击: " + BUTTON_NAMES[index] + "（此功能待后续步骤实现）");
-        showBubble(BUTTON_NAMES[index] + " · 待后续步骤实现");
-        toggleMenu(false);
-    }
-
-    void toggleMenu(boolean open) {
-        if (menuOpen == open) {
-            return;
-        }
-        menuOpen = open;
-        animStart = System.currentTimeMillis();
-        animating = true;
-        Log.info(open ? "三角形菜单展开" : "三角形菜单收起");
-    }
-
-    // ---------------------------------------------------------------- 绘制
-
-    private void onTick() {
-        long now = System.currentTimeMillis();
-        boolean needRepaint = false;
-
-        if (animating) {
-            double t = Math.min(1.0, (now - animStart) / (double) ANIM_MS);
-            progress = menuOpen ? ease(t) : 1.0 - ease(t);
-            applyShape();
-            needRepaint = true;
-            if (t >= 1.0) {
-                animating = false;
-                progress = menuOpen ? 1.0 : 0.0;
-            }
-        }
-
-        if (bubble != null && now > bubbleUntil) {
-            bubble = null;
-            needRepaint = true;
-        }
-        if (needRepaint) {
-            repaint();
-        }
-    }
-
-    private static double ease(double t) {
-        return 1 - Math.pow(1 - t, 3);
-    }
-
-    private void applyShape() {
-        Area area = new Area(characterShape);
-        for (int i = 0; i < BUTTON_ANGLES.length; i++) {
-            if (progress <= 0.02) {
-                continue;
-            }
-            Point c = buttonCenter(i);
-            double d = buttonDiameter() * (0.55 + 0.45 * progress);
-            area.add(new Area(new Ellipse2D.Double(c.x - d / 2, c.y - d / 2, d, d)));
-        }
-        try {
-            setShape(area);
-        } catch (Exception e) {
-            Log.error("设置窗口形状失败", e);
-        }
-    }
-
-    private double buttonDiameter() {
-        return buttonDiameter * (0.55 + 0.45 * progress);
-    }
-
-    private Point buttonCenter(int index) {
-        double rad = Math.toRadians(BUTTON_ANGLES[index]);
-        double r = buttonDistance[index] * progress;
-        return new Point(
-                (int) Math.round(centerX + Math.cos(rad) * r),
-                (int) Math.round(centerY + Math.sin(rad) * r));
-    }
-
-    private int buttonAt(Point p) {
-        if (progress < 0.75) {
-            return -1;
-        }
-        double d = buttonDiameter();
-        for (int i = 0; i < BUTTON_ANGLES.length; i++) {
-            Point c = buttonCenter(i);
-            if (Math.hypot(p.x - c.x, p.y - c.y) <= d / 2) {
-                return i;
-            }
-        }
-        return -1;
     }
 
     private void showBubble(String text) {
         bubble = text;
-        bubbleUntil = System.currentTimeMillis() + 2200;
+        bubbleUntil = now + 2400;
         repaint();
     }
+
+    /** 自检：用真实鼠标事件点一下角色，验证点击链路。 */
+    public void selfTestClick() {
+        try {
+            java.awt.Robot robot = new java.awt.Robot();
+            int tx = getX() + groundX;
+            int ty = getY() + groundY - spriteH / 2;
+            Log.info("自检：点击角色 (" + tx + "," + ty + ")");
+            robot.mouseMove(tx, ty);
+            robot.delay(200);
+            robot.mousePress(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
+            robot.delay(60);
+            robot.mouseRelease(java.awt.event.InputEvent.BUTTON1_DOWN_MASK);
+        } catch (Exception e) {
+            Log.error("自检点击失败", e);
+        }
+    }
+
+    // ------------------------------------------------------------- 绘制
 
     private final class PetPanel extends javax.swing.JPanel {
         @Override
@@ -376,16 +632,8 @@ public final class PetWindow extends JWindow {
                     RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-
-            g.drawImage(sprite.image(), spriteX, spriteY, null);
-
-            // 按钮画在角色之上，否则底部那个会被身体挡住
-            if (progress > 0.02) {
-                for (int i = 0; i < BUTTON_ANGLES.length; i++) {
-                    drawButton(g, i);
-                }
-            }
-
+            drawPet(g);
+            drawMenu(g);
             if (bubble != null) {
                 drawBubble(g);
             }
@@ -393,28 +641,128 @@ public final class PetWindow extends JWindow {
         }
     }
 
-    private void drawButton(Graphics2D g, int index) {
-        Point c = buttonCenter(index);
-        double d = buttonDiameter();
-        float alpha = (float) Math.max(0.0, Math.min(1.0, progress));
-        boolean hover = index == hoverIndex;
-        double drawD = hover ? d * 1.08 : d;
+    private void drawPet(Graphics2D g) {
+        double swayTilt = config.d("sway.tilt.deg", 8)
+                * Math.sin(2 * Math.PI * now / 1000.0 / config.d("sway.period.sec", 1.5))
+                * (1 - 0.7 * lieAmount);
+        double stumble = 0;
+        if (now < stumbleUntil) {
+            stumble = config.d("stumble.tilt.deg", 15) * Math.sin(Math.PI * (1 - (stumbleUntil - now) / 500.0));
+        }
+        double bodyAngle = swayTilt + stumble + lieAmount * LIE_ANGLE;
+        double bob = Math.sin(2 * Math.PI * now / 1000.0 / config.d("sway.period.sec", 1.5) * 2)
+                * config.d("bob.device.px", 4) * (state == State.WALK ? 1.0 : 0.6);
+
+        // 影子：贴地，随身体倾斜拉长
+        double shadowW = spriteW * (0.75 + 0.55 * lieAmount);
+        double shadowH = 14 * dpiScale;
+        g.setColor(new Color(20, 25, 45, 62));
+        g.fill(new Ellipse2D.Double(groundX - shadowW / 2, groundY - shadowH / 2 + 2, shadowW, shadowH));
 
         Graphics2D g2 = (Graphics2D) g.create();
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+        g2.translate(groundX, groundY + bob);
+        // 躺下时固定头朝左侧，这样只需要在窗口左侧留出空间
+        if (mirrored && lieAmount < 0.5) {
+            g2.scale(-1, 1);
+        }
+        g2.rotate(Math.toRadians(bodyAngle));
 
-        // 用两层柔和投影代替描边：浅色背景上也能看出是个浮起的圆盘，但不会出现黑边
-        g2.setColor(new Color(30, 40, 70, 26));
-        g2.fill(new Ellipse2D.Double(c.x - drawD / 2 - 1, c.y - drawD / 2, drawD + 2, drawD + 3));
-        g2.setColor(new Color(30, 40, 70, 52));
-        g2.fill(new Ellipse2D.Double(c.x - drawD / 2 + 1, c.y - drawD / 2 + 3, drawD, drawD));
-        g2.setColor(new Color(0xF7FAFF));
-        g2.fill(new Ellipse2D.Double(c.x - drawD / 2, c.y - drawD / 2, drawD, drawD));
-
-        double iconSize = drawD * 0.56;
-        double cell = iconSize / 16.0;
-        BUTTON_ICONS[index].render(g2, c.x - iconSize / 2, c.y - iconSize / 2, cell);
+        drawLegs(g2);
+        drawBody(g2);
+        drawStaff(g2);
         g2.dispose();
+
+        if (lieAmount > 0.25) {
+            drawSleepMarks(g);
+        }
+    }
+
+    /** 休息时头顶冒的 Z 字，随呼吸节奏变大变小。 */
+    private void drawSleepMarks(Graphics2D g) {
+        double phase = (now % 2400) / 2400.0;
+        double alpha = lieAmount * Math.min(1.0, Math.sin(phase * Math.PI) * 1.6);
+        if (alpha <= 0.02) {
+            return;
+        }
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, (float) alpha));
+        g2.setColor(new Color(0x2E3A5C));
+        for (int i = 0; i < 3; i++) {
+            int size = (int) Math.round((11 + i * 4) * dpiScale);
+            int x = groundX + (int) Math.round((18 + i * 16) * dpiScale);
+            int y = groundY - spriteH + (int) Math.round((10 - i * 22) * dpiScale + (now % 2400) * 0.006);
+            g2.setFont(new Font("Microsoft YaHei", Font.BOLD, size));
+            g2.drawString("z", x, y);
+        }
+        g2.dispose();
+    }
+
+    private void drawBody(Graphics2D g) {
+        int x = -spriteW / 2;
+        int y = -spriteH;
+        scaleUp(g, rig.body(), x, y);
+    }
+
+    private void drawStaff(Graphics2D g) {
+        Point origin = rig.staffOrigin();
+        double localX = (origin.x - rig.width() / 2.0) * SPRITE_SCALE;
+        double localY = (origin.y - rig.height()) * SPRITE_SCALE;
+        double pivotX = (rig.grip().x - rig.width() / 2.0) * SPRITE_SCALE;
+        double pivotY = (rig.grip().y - rig.height()) * SPRITE_SCALE;
+        // 镜像绘制时局部旋转方向会反过来，这里把符号扳回去，让摆向和物理一致
+        double angle = mirrored ? -pendulum.angle() : pendulum.angle();
+        Graphics2D g2 = (Graphics2D) g.create();
+        g2.rotate(angle + menuProgress * Math.toRadians(-16), pivotX, pivotY);
+        scaleUp(g2, rig.staff(), localX, localY);
+        g2.dispose();
+    }
+
+    private void drawLegs(Graphics2D g) {
+        double swing = state == State.WALK
+                ? Math.toRadians(7) * Math.sin(walkPhase) * speedFactor
+                : 0;
+        for (int i = 0; i < 2; i++) {
+            Point origin = rig.legOrigin(i);
+            double localX = (origin.x - rig.width() / 2.0) * SPRITE_SCALE;
+            double localY = (origin.y - rig.height()) * SPRITE_SCALE;
+            double pivotX = (rig.hip(i).x - rig.width() / 2.0) * SPRITE_SCALE;
+            double pivotY = (rig.hip(i).y - rig.height()) * SPRITE_SCALE;
+            double angle = lieAmount > 0.1 ? 0 : (i == 0 ? swing : -swing);
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.rotate(angle, pivotX, pivotY);
+            scaleUp(g2, rig.leg(i), localX, localY);
+            g2.dispose();
+        }
+    }
+
+    private void scaleUp(Graphics2D g, java.awt.image.BufferedImage img, double x, double y) {
+        g.drawImage(img, (int) Math.round(x), (int) Math.round(y),
+                img.getWidth() * SPRITE_SCALE, img.getHeight() * SPRITE_SCALE, null);
+    }
+
+    private void drawMenu(Graphics2D g) {
+        if (menuProgress <= 0.02) {
+            return;
+        }
+        for (int i = 0; i < MENU_ANGLES.length; i++) {
+            Point c = buttonCenter(i);
+            double d = buttonDiameter * (0.55 + 0.45 * menuProgress);
+            boolean hover = i == hoverIndex;
+            double drawD = hover ? d * 1.08 : d;
+            float alpha = (float) Math.max(0.0, Math.min(1.0, menuProgress));
+
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+            g2.setColor(new Color(30, 40, 70, 26));
+            g2.fill(new Ellipse2D.Double(c.x - drawD / 2 - 1, c.y - drawD / 2, drawD + 2, drawD + 3));
+            g2.setColor(new Color(30, 40, 70, 52));
+            g2.fill(new Ellipse2D.Double(c.x - drawD / 2 + 1, c.y - drawD / 2 + 3, drawD, drawD));
+            g2.setColor(new Color(0xF7FAFF));
+            g2.fill(new Ellipse2D.Double(c.x - drawD / 2, c.y - drawD / 2, drawD, drawD));
+            double iconSize = drawD * 0.56;
+            BUTTON_ICONS[i].render(g2, c.x - iconSize / 2, c.y - iconSize / 2, iconSize / 16.0);
+            g2.dispose();
+        }
     }
 
     private void drawBubble(Graphics2D g) {
@@ -423,31 +771,28 @@ public final class PetWindow extends JWindow {
         int padX = (int) Math.round(12 * dpiScale);
         int w = fm.stringWidth(bubble) + padX * 2;
         int h = fm.getHeight() + (int) Math.round(8 * dpiScale);
-        int x = centerX - w / 2;
-        // 气泡画在角色脚下，避免和头顶的三角形菜单打架
-        int y = spriteY + sprite.height() + (int) Math.round(6 * dpiScale);
-        if (y + h > getHeight() - 2) {
-            y = getHeight() - h - 2;
-        }
+        int x = Math.min(Math.max(4, groundX - w / 2), windowW - w - 4);
+        int y = Math.max(4, chestY - menuRadius - h - 6);
         g.setColor(new Color(0x23263A));
         g.fill(new RoundRectangle2D.Double(x, y, w, h, 12, 12));
         g.setColor(new Color(0xF7F9FF));
         g.drawString(bubble, x + padX, y + (h - fm.getHeight()) / 2 + fm.getAscent());
     }
 
+    // ------------------------------------------------------------- 托盘 / 右键
+
     private void installPopupMenu(javax.swing.JComponent panel) {
         javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
         javax.swing.JMenuItem about = new javax.swing.JMenuItem("关于桌宠");
-        about.addActionListener(e -> {
-            Log.info("菜单：关于");
-            showBubble("桌宠 v0.1 · 第一步：三角形菜单");
-        });
+        about.addActionListener(e -> showBubble("桌宠 v0.2 · 会走路的版本"));
+        javax.swing.JMenuItem rest = new javax.swing.JMenuItem("让她休息");
+        rest.addActionListener(e -> enterRest());
         javax.swing.JMenuItem quit = new javax.swing.JMenuItem("退出");
         quit.addActionListener(e -> exit());
         menu.add(about);
+        menu.add(rest);
         menu.addSeparator();
         menu.add(quit);
-
         panel.addMouseListener(new MouseAdapter() {
             @Override
             public void mousePressed(MouseEvent e) {
@@ -465,34 +810,26 @@ public final class PetWindow extends JWindow {
         });
     }
 
-    /** 托盘图标：窗口没有任务栏条目，托盘是备用出口 */
     private void installTrayIcon() {
         if (!SystemTray.isSupported()) {
-            Log.info("系统不支持托盘图标，跳过");
             return;
         }
         try {
-            Image icon = sprite.image().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+            Image icon = rig.body().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
             PopupMenu popup = new PopupMenu();
-
             MenuItem showItem = new MenuItem("显示 / 隐藏");
-            showItem.addActionListener(e -> {
-                boolean visible = isVisible();
-                setVisible(!visible);
-                Log.info("托盘：切换显示 -> " + !visible);
-            });
+            showItem.addActionListener(e -> setVisible(!isVisible()));
+            MenuItem restItem = new MenuItem("让她休息");
+            restItem.addActionListener(e -> enterRest());
             MenuItem quitItem = new MenuItem("退出");
             quitItem.addActionListener(e -> exit());
             popup.add(showItem);
+            popup.add(restItem);
             popup.addSeparator();
             popup.add(quitItem);
-
             TrayIcon trayIcon = new TrayIcon(icon, "桌宠", popup);
             trayIcon.setImageAutoSize(true);
-            trayIcon.addActionListener(e -> {
-                setVisible(true);
-                Log.info("托盘：显示桌宠");
-            });
+            trayIcon.addActionListener(e -> setVisible(true));
             SystemTray.getSystemTray().add(trayIcon);
             Log.info("托盘图标已就绪");
         } catch (Exception e) {
