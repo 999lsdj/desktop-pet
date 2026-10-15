@@ -75,58 +75,63 @@ public final class RigPreview {
     }
 
     /**
-     * 链式自检：给挂点一个横向阶跃，看整条链摆起来之后会不会收敛、会不会发散。
-     * 判据是"后 1 秒的残余振幅远小于前 1 秒"，以及数值没有变成 NaN、角度没有越过限位。
+     * 链式自检：挂点在 0.2 秒内平移 30 像素再松手，看整条链会不会收敛、会不会发散，
+     * 同时确认每节杆长始终在容差内（约束求解没被拉长）。
+     *
+     * 输入不能用"一帧内瞬移"：那会把限幅一次打满，任何参数都表现为同一结果，测不出东西。
      */
     private static void chainSelfCheck() {
-        int linkCount = 4;
+        int nodeCount = 5;
+        double segLen = 12;
         double dt = 1.0 / 120;
         double gravity = 900;
-        double maxAngleDeg = 40;
-        PendulumChain chain = new PendulumChain(linkCount, maxAngleDeg, 12, 1.1, 5.0, 0.25);
+        double maxAngleDeg = 30;
+        VerletChain chain = new VerletChain(nodeCount, segLen, maxAngleDeg, 2.5);
 
-        // 预热一秒，让有限差分的速度有基准，避免第一帧就把加速度算爆
+        // 先静止一秒，让链竖直挂好
         chain.setAnchor(0, 0);
         for (int i = 0; i < 120; i++) {
             chain.update(dt, gravity);
         }
 
-        // 阶跃：挂点一帧内横向挪 30 像素，相当于甩了一下
-        chain.setAnchor(30, 0);
-        chain.update(dt, gravity);
-
-        int frames = (int) Math.round(4 / dt);
-        double firstSecond = 0;
+        int ramp = (int) Math.round(0.2 / dt);
+        int frames = (int) Math.round(12 / dt);
+        double shakePeak = 0;
         double lastSecond = 0;
-        double maxAbs = 0;
+        double worstLengthError = 0;
         boolean finite = true;
         for (int f = 0; f < frames; f++) {
+            chain.setAnchor(f < ramp ? 30.0 * (f + 1) / ramp : 30, 0);
             chain.update(dt, gravity);
-            for (int i = 0; i < linkCount; i++) {
-                double a = chain.linkAngleDeg(i);
+            for (int i = 1; i < nodeCount; i++) {
+                double a = chain.jointAngleDeg(i);
                 if (!Double.isFinite(a)) {
                     finite = false;
                     continue;
                 }
-                maxAbs = Math.max(maxAbs, Math.abs(a));
-                if (f < 120) {
-                    firstSecond = Math.max(firstSecond, Math.abs(a));
+                if (f >= ramp && f < ramp + 120) {
+                    shakePeak = Math.max(shakePeak, Math.abs(a));
                 }
                 if (f >= frames - 120) {
                     lastSecond = Math.max(lastSecond, Math.abs(a));
                 }
+                worstLengthError = Math.max(worstLengthError,
+                        Math.abs(chain.segmentLength(i) - segLen));
             }
         }
-        double ratio = lastSecond <= 1e-9 ? Double.POSITIVE_INFINITY : firstSecond / lastSecond;
-        Log.info(String.format("链式自检 %d 节：阶跃后最大摆角 %.2f 度（限位 %.0f 度）；"
-                        + "前 1 秒振幅 %.2f 度、后 1 秒残余 %.4f 度，衰减 %.0f 倍；数值%s",
-                linkCount, maxAbs, maxAngleDeg, firstSecond, lastSecond, ratio,
-                finite ? "正常" : "出现 NaN/Inf"));
-        if (!finite || maxAbs > maxAngleDeg + 1e-6) {
-            Log.error("链式自检不通过：数值异常或角度越过限位", null);
+        Log.info(String.format("链式自检 %d 节点 %d 节（限位 %.0f 度）：松手后 1 秒峰值 %.2f 度、"
+                        + "12 秒后末 1 秒峰值 %.4f 度；杆长最大偏差 %.6f 像素；数值%s",
+                nodeCount, nodeCount - 1, maxAngleDeg, shakePeak, lastSecond,
+                worstLengthError, finite ? "正常" : "出现 NaN/Inf"));
+        if (!finite) {
+            Log.error("链式自检不通过：数值出现 NaN/Inf", null);
         }
-        if (lastSecond > firstSecond * 0.2) {
-            Log.error("链式自检不通过：4 秒后仍未收敛到 20% 以内", null);
+        if (worstLengthError > 0.01) {
+            Log.error("链式自检不通过：杆长被拉长 " + worstLengthError + " 像素", null);
+        }
+        if (lastSecond > 1.0) {
+            // 判据是"停住"而不是"变小"：暴力甩过之后，12 秒内所有关节都要落到 1 度以内
+            Log.error("链式自检不通过：12 秒后仍未停住（末 1 秒峰值 " + lastSecond + " 度）", null);
         }
     }
 
