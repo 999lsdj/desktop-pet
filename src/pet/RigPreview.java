@@ -27,6 +27,8 @@ public final class RigPreview {
     private static final double BEND_PIVOT_Y = 89 * SCALE;
     private static final double BEND_FROM_Y = 88 * SCALE;
     private static final double BEND_TO_Y = 123 * SCALE;
+    /** 蒙皮权重的影响半径（原生像素）：越大过渡越软，越小越接近刚性跟随 */
+    private static final double SKIN_FALLOFF_PX = 16;
 
     public static void main(String[] args) throws Exception {
         Path root = Paths.get("").toAbsolutePath();
@@ -64,6 +66,77 @@ public final class RigPreview {
         System.out.println("skeleton check -> " + skelOut);
         skeletonSelfCheck(rig);
         ikSelfCheck(rig);
+
+        Path skinOut = Paths.get("_tmp", "shots", "skin-check.png").toAbsolutePath();
+        ImageIO.write(skinCheckSheet(rig), "png", skinOut.toFile());
+        System.out.println("skin check -> " + skinOut);
+        skinSelfCheck(rig);
+    }
+
+    /** 蒙皮验收图：整张图按骨骼权重变形，看关节处是不是连续弯、有没有缺口。 */
+    private static BufferedImage skinCheckSheet(BodyRig rig) {
+        int tileW = 300;
+        int tileH = 340;
+        BufferedImage sheet = new BufferedImage(tileW * 3, tileH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setColor(new Color(0xF2F5FA));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+
+        for (int tile = 0; tile < 3; tile++) {
+            Skeleton skel = Skeleton.from(rig);
+            applyPose(skel, rig, tile);
+            Skin skin = new Skin(rig.original(), skel, BENCH_GRIDS[0][0], BENCH_GRIDS[0][1],
+                    SKIN_FALLOFF_PX);
+            skin.update();
+
+            double offX = tile * tileW + (tileW - rig.width() * SCALE) / 2.0;
+            double offY = (tileH - rig.height() * SCALE) / 2.0;
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            // 蒙皮算出来的是原生坐标，这里放大到屏幕上同样的尺寸
+            g2.translate(offX, offY);
+            g2.scale(SCALE, SCALE);
+            skin.mesh().draw(g2, 0, 0);
+            g2.dispose();
+        }
+        g.dispose();
+        return sheet;
+    }
+
+    /** 蒙皮自检：静止姿态下顶点不该动；顺带量一下每帧重算的耗时。 */
+    private static void skinSelfCheck(BodyRig rig) {
+        Skeleton rest = Skeleton.from(rig);
+        Skin skin = new Skin(rig.original(), rest, BENCH_GRIDS[0][0], BENCH_GRIDS[0][1],
+                SKIN_FALLOFF_PX);
+        skin.update();
+        double worst = 0;
+        for (int i = 0; i < skin.mesh().vertexCount(); i++) {
+            worst = Math.max(worst, Math.hypot(skin.mesh().dstX(i) - skin.mesh().srcX(i),
+                    skin.mesh().dstY(i) - skin.mesh().srcY(i)));
+        }
+
+        Skeleton posed = Skeleton.from(rig);
+        Skin moving = new Skin(rig.original(), posed, BENCH_GRIDS[0][0], BENCH_GRIDS[0][1],
+                SKIN_FALLOFF_PX);
+        int frames = 240;
+        int warmup = 60;
+        long[] ns = new long[frames - warmup];
+        for (int f = 0; f < frames; f++) {
+            posed.setDelta("thighNear", 20 * Math.sin(f * 0.05));
+            posed.setDelta("thighFar", -20 * Math.sin(f * 0.05));
+            posed.setDelta("staff", 15 * Math.sin(f * 0.07));
+            posed.update();
+            long t0 = System.nanoTime();
+            moving.update();
+            long t1 = System.nanoTime();
+            if (f >= warmup) {
+                ns[f - warmup] = t1 - t0;
+            }
+        }
+        Log.info("蒙皮自检 静止姿态顶点最大位移 " + String.format("%.9f", worst)
+                + " 原生像素 | 顶点 " + skin.skinnedVertexCount() + " 个 | 每帧重算 "
+                + stats(ns));
     }
 
     /** 骨架验收图：静止姿态、摆过腿和杖的姿态、以及用 IK 够到目标点的姿态。 */
@@ -79,26 +152,7 @@ public final class RigPreview {
 
         for (int tile = 0; tile < 3; tile++) {
             Skeleton skel = Skeleton.from(rig);
-            Point2D.Double target = null;
-            if (tile == 1) {
-                // 摆腿与甩灯：验证父子级联——小腿跟着大腿动，提灯跟着手走
-                skel.setDelta("thighNear", 25);
-                skel.setDelta("shinNear", -35);
-                skel.setDelta("thighFar", -20);
-                skel.setDelta("torso", 6);
-                skel.update();
-                skel.setDelta("staff", 18);
-                skel.update();
-            } else if (tile == 2) {
-                // 用 IK 让手够一个目标点，提灯作为子骨会自动跟过去
-                Point2D.Double shoulder = skel.start("upperArm");
-                target = new Point2D.Double(rig.grip().x + 26, rig.grip().y - 30);
-                Ik.Solution sol = Ik.solve(shoulder.x, shoulder.y,
-                        skel.bone("upperArm").lengthPx, skel.bone("foreArm").lengthPx,
-                        target.x, target.y, true);
-                skel.aim("upperArm", sol.firstWorldDeg);
-                skel.aim("foreArm", sol.secondWorldDeg);
-            }
+            Point2D.Double target = applyPose(skel, rig, tile);
 
             double offX = tile * tileW + (tileW - sprite.getWidth()) / 2.0;
             double offY = (tileH - sprite.getHeight()) / 2.0;
@@ -121,6 +175,33 @@ public final class RigPreview {
         }
         g.dispose();
         return sheet;
+    }
+
+    /** 验收图三格的姿态：0 静止，1 摆腿甩灯，2 用 IK 够目标点。返回目标点或 null。 */
+    private static Point2D.Double applyPose(Skeleton skel, BodyRig rig, int tile) {
+        if (tile == 1) {
+            // 摆腿与甩灯：验证父子级联——小腿跟着大腿动，提灯跟着手走
+            skel.setDelta("thighNear", 25);
+            skel.setDelta("shinNear", -35);
+            skel.setDelta("thighFar", -20);
+            skel.setDelta("torso", 6);
+            skel.update();
+            skel.setDelta("staff", 18);
+            skel.update();
+            return null;
+        }
+        if (tile == 2) {
+            // 用 IK 让手够一个目标点，提灯作为子骨会自动跟过去
+            Point2D.Double shoulder = skel.start("upperArm");
+            Point2D.Double target = new Point2D.Double(rig.grip().x + 26, rig.grip().y - 30);
+            Ik.Solution sol = Ik.solve(shoulder.x, shoulder.y,
+                    skel.bone("upperArm").lengthPx, skel.bone("foreArm").lengthPx,
+                    target.x, target.y, true);
+            skel.aim("upperArm", sol.firstWorldDeg);
+            skel.aim("foreArm", sol.secondWorldDeg);
+            return target;
+        }
+        return null;
     }
 
     /**

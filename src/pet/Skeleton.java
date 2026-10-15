@@ -30,6 +30,8 @@ public final class Skeleton {
         public final double lengthPx;
         private double deltaDeg;
         private final AffineTransform world = new AffineTransform();
+        /** 静止姿态下的世界变换，蒙皮拿它算"这根骨头把顶点搬了多远"。 */
+        private final AffineTransform restWorld = new AffineTransform();
 
         private Bone(String name, String parent, double offsetX, double offsetY,
                      double restAngleDeg, double lengthPx) {
@@ -44,6 +46,14 @@ public final class Skeleton {
         /** 相对静止姿态的追加角度（度），动画就是改这个值。 */
         public double deltaDeg() {
             return deltaDeg;
+        }
+
+        public AffineTransform world() {
+            return world;
+        }
+
+        public AffineTransform restWorld() {
+            return restWorld;
         }
     }
 
@@ -144,6 +154,8 @@ public final class Skeleton {
         order.add(bone);
         // 立刻算一次，后面的子骨要读父骨的世界变换
         update();
+        // 刚建好的骨头还没有任何 delta，此刻的世界变换就是它的静止变换
+        bone.restWorld.setTransform(bone.world);
     }
 
     /** 把世界方向换算成相对父骨的方向；建骨阶段父骨已经算过世界变换。 */

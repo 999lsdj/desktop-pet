@@ -97,6 +97,34 @@ public final class MeshWarp {
         return tris.length / 3;
     }
 
+    public int vertexCount() {
+        return srcX.length;
+    }
+
+    /** 顶点在源图里的位置，蒙皮要拿它当静止位置用。 */
+    public double srcX(int i) {
+        return srcX[i];
+    }
+
+    public double srcY(int i) {
+        return srcY[i];
+    }
+
+    /** 直接指定某个顶点的目标位置，供蒙皮写入。 */
+    public void setVertex(int i, double x, double y) {
+        dstX[i] = x;
+        dstY[i] = y;
+    }
+
+    /** 读回顶点当前的目标位置，蒙皮自检和将来的命中判定要用。 */
+    public double dstX(int i) {
+        return dstX[i];
+    }
+
+    public double dstY(int i) {
+        return dstY[i];
+    }
+
     /** 把变形后的图按 (offsetX, offsetY) 平移到 g 上。 */
     public void draw(Graphics2D g, double offsetX, double offsetY) {
         Object aa = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
