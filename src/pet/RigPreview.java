@@ -1,5 +1,6 @@
 package pet;
 
+import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
@@ -18,8 +19,18 @@ public final class RigPreview {
     private static final int SCALE = 2;
     private static final int TILE_W = 340;
     private static final int TILE_H = 380;
+    /** 测试网格密度（格数）：12×14 是粗网格，24×28 用来对比加密后的代价 */
+    private static final int[][] BENCH_GRIDS = {{12, 14}, {24, 28}};
+    /** 折痕取髋线：折痕以上不动，往下 35 像素内线性加大旋转角 */
+    private static final double BEND_PIVOT_X = 44 * SCALE;
+    private static final double BEND_PIVOT_Y = 89 * SCALE;
+    private static final double BEND_FROM_Y = 88 * SCALE;
+    private static final double BEND_TO_Y = 123 * SCALE;
 
     public static void main(String[] args) throws Exception {
+        Path root = Paths.get("").toAbsolutePath();
+        Log.init(root.resolve("logs").resolve("pet.log"));
+
         Path spritePath = Paths.get("assets", "sprites", "pet-base.png").toAbsolutePath();
         BodyRig rig = BodyRig.load(spritePath);
 
@@ -40,6 +51,139 @@ public final class RigPreview {
         java.nio.file.Files.createDirectories(out.getParent());
         ImageIO.write(sheet, "png", out.toFile());
         System.out.println("rig preview -> " + out);
+
+        BufferedImage sprite2x = scale2x(rig.original());
+        Path meshOut = Paths.get("_tmp", "shots", "mesh-check.png").toAbsolutePath();
+        ImageIO.write(meshCheckSheet(sprite2x), "png", meshOut.toFile());
+        System.out.println("mesh check -> " + meshOut);
+        meshBench(sprite2x);
+    }
+
+    /** 与桌宠一致的整数倍最近邻放大，让变形验收和屏幕上看到的是同一尺寸。 */
+    private static BufferedImage scale2x(BufferedImage src) {
+        BufferedImage out = new BufferedImage(src.getWidth() * SCALE, src.getHeight() * SCALE,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = out.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.drawImage(src, 0, 0, out.getWidth(), out.getHeight(), null);
+        g.dispose();
+        return out;
+    }
+
+    /**
+     * 网格变形验收图：第一行是弯曲结果，第二行叠上网格线（看网格怎么弯、有没有露缺口）。
+     * 四列的角度依次加大，红点是折痕所在的关节枢轴。
+     */
+    private static BufferedImage meshCheckSheet(BufferedImage sprite) {
+        double[] angles = {0, 15, 30, 45};
+        int tileW = 260;
+        int tileH = 300;
+        BufferedImage sheet = new BufferedImage(tileW * angles.length, tileH * 2,
+                BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setColor(new Color(0xF2F5FA));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+
+        for (int i = 0; i < angles.length; i++) {
+            for (int row = 0; row < 2; row++) {
+                int tileX = i * tileW;
+                int tileY = row * tileH;
+                double offX = tileX + (tileW - sprite.getWidth()) / 2.0;
+                double offY = tileY + (tileH - sprite.getHeight()) / 2.0;
+
+                MeshWarp warp = new MeshWarp(sprite, BENCH_GRIDS[0][0], BENCH_GRIDS[0][1]);
+                warp.bendAround(BEND_PIVOT_X, BEND_PIVOT_Y, BEND_FROM_Y, BEND_TO_Y, angles[i]);
+                warp.draw(g, offX, offY);
+                if (row == 1) {
+                    warp.drawGrid(g, offX, offY, new Color(40, 90, 190, 110));
+                } else {
+                    g.setColor(new Color(255, 60, 60));
+                    g.fillOval((int) (offX + BEND_PIVOT_X) - 3, (int) (offY + BEND_PIVOT_Y) - 3, 6, 6);
+                }
+            }
+        }
+        g.dispose();
+        return sheet;
+    }
+
+    /**
+     * 逐帧耗时：求值（顶点位移）与绘制（网格贴图）分开计时，并和"整图直贴"对照，
+     * 看 105×123 母图、2 倍显示下能不能留在 120 Hz 的每帧预算里。
+     */
+    private static void meshBench(BufferedImage sprite) {
+        int frames = 240;
+        int warmup = 60;
+        BufferedImage buf = new BufferedImage(340, 380, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = buf.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        double offX = 65;
+        double offY = 67;
+
+        for (int[] grid : BENCH_GRIDS) {
+            MeshWarp warp = new MeshWarp(sprite, grid[0], grid[1]);
+            long[] eval = new long[frames - warmup];
+            long[] paint = new long[frames - warmup];
+            for (int f = 0; f < frames; f++) {
+                clear(g, buf);
+                long t0 = System.nanoTime();
+                warp.reset();
+                warp.bendAround(BEND_PIVOT_X, BEND_PIVOT_Y, BEND_FROM_Y, BEND_TO_Y,
+                        30 * Math.sin(f * 0.05));
+                long t1 = System.nanoTime();
+                warp.draw(g, offX, offY);
+                long t2 = System.nanoTime();
+                if (f >= warmup) {
+                    eval[f - warmup] = t1 - t0;
+                    paint[f - warmup] = t2 - t1;
+                }
+            }
+            report("网格 " + grid[0] + "x" + grid[1] + "（三角形 " + warp.triangleCount() + "）",
+                    eval, paint);
+        }
+
+        long[] rigid = new long[frames - warmup];
+        for (int f = 0; f < frames; f++) {
+            clear(g, buf);
+            long t0 = System.nanoTime();
+            g.drawImage(sprite, (int) offX, (int) offY, null);
+            long t1 = System.nanoTime();
+            if (f >= warmup) {
+                rigid[f - warmup] = t1 - t0;
+            }
+        }
+        report("对照：整图直贴（现在桌宠的做法）", null, rigid);
+        g.dispose();
+    }
+
+    private static void clear(Graphics2D g, BufferedImage buf) {
+        g.setComposite(AlphaComposite.Clear);
+        g.fillRect(0, 0, buf.getWidth(), buf.getHeight());
+        g.setComposite(AlphaComposite.SrcOver);
+    }
+
+    private static void report(String label, long[] eval, long[] paint) {
+        StringBuilder sb = new StringBuilder(label);
+        if (eval != null) {
+            sb.append(" | 求值 ").append(stats(eval));
+        }
+        sb.append(" | 绘制 ").append(stats(paint));
+        Log.info("蒙皮耗时 " + sb);
+    }
+
+    private static String stats(long[] ns) {
+        long[] copy = ns.clone();
+        java.util.Arrays.sort(copy);
+        double avg = 0;
+        for (long v : copy) {
+            avg += v;
+        }
+        avg /= copy.length;
+        return String.format("平均 %.3f ms P95 %.3f ms 最大 %.3f ms",
+                avg / 1e6, copy[(int) (copy.length * 0.95)] / 1e6, copy[copy.length - 1] / 1e6);
     }
 
     private static void drawTile(Graphics2D g, BodyRig rig, int tileX, double tilt,

@@ -118,7 +118,7 @@ def heading(doc, text, level=1):
     return paragraph
 
 
-def build(out_path, figure_path):
+def build(out_path, figure_path, mesh_figure_path=""):
     doc = Document()
 
     style = doc.styles["Normal"]
@@ -140,7 +140,7 @@ def build(out_path, figure_path):
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(14)
-    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-13（第二轮调整后）")
+    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-15（骨骼动画方案落成、第一版验证通过）")
     set_run(run, size=10.5)
 
     body(doc,
@@ -148,7 +148,10 @@ def build(out_path, figure_path):
          "每一步是怎么做的、结果如何，以及下一步要做什么。当前进度是："
          "第一步「点击展开三角形菜单」已经完成并通过实机验证，"
          "随后按使用反馈做了第二轮调整（角色缩小、菜单移到头顶上方、去掉悬停文字），"
-         "计划表、常用文件、视频网站三个功能还只是占位按钮，等待后续实现。")
+         "第五步「让桌宠动起来」也已完成，并在被退回一次后返工做对；"
+         "计划表、常用文件、视频网站三个功能还只是占位按钮，等待后续实现。"
+         "最新一轮把目标提到骨骼动画（关节要能连续弯），并新增被鼠标拎起来与招手两个动作，"
+         "方案已经落成，第一版性能验证通过，细节见第十二节。")
 
     heading(doc, "一、项目目标与分步计划")
     body(doc,
@@ -165,8 +168,9 @@ def build(out_path, figure_path):
             ["第 3 步", "常用文件：记录近期频繁打开的 5 个文件并快速打开", "待开始"],
             ["第 4 步", "视频网站：一键打开 B 站网页版", "待开始"],
             ["第 5 步", "走动、微醺摇晃、提灯物理、休息", "已完成"],
-            ["第 6 步", "待机动画细节、拖拽手感、开机自启", "待开始"],
-            ["第 7 步", "用 jpackage 打包成免安装 exe", "待开始"],
+            ["第 6 步", "骨骼动画：关节灵活、被鼠标拎起来、招手", "进行中"],
+            ["第 7 步", "待机动画细节、拖拽手感、开机自启", "待开始"],
+            ["第 8 步", "用 jpackage 打包成免安装 exe", "待开始"],
         ],
         widths=[2.2, 10.4, 2.4],
         aligns=["c", "l", "c"],
@@ -450,6 +454,76 @@ def build(out_path, figure_path):
         widths=[6.4, 8.6],
     )
 
+    heading(doc, "十二、骨骼动画方案落成与第一版验证")
+    body(doc,
+         "角色现在的动作是四片刚体贴图各自绕枢轴旋转，关节处没有形变能力，"
+         "多转几度就会露出被挖空的透明洞，所以动作幅度一直做不大。"
+         "这一轮把「骨骼动画」定成新目标：关节要能连续弯，"
+         "并新增两个动作——被鼠标拎起来、招手，两者都需要循环播放。"
+         "方案整理成一份 OpenSpec 变更文档，放在项目的 openspec 目录下。")
+    make_table(
+        doc,
+        ["事项", "决定"],
+        [
+            ["骨骼放哪",
+             "在 Java 运行时自己求值：骨树、双骨 IK、按顶点权重的网格变形。"
+             "不引入任何第三方库，编译仍然只用 JDK 自带的 javac"],
+            ["形变分级",
+             "只有肩、肘、髋、膝四处用蒙皮；头发、袖子、袍摆、提灯挂成链，"
+             "每节一个阻尼单摆，直接复用现有提灯单摆那段代码"],
+            ["角色尺寸",
+             "接受美术返工：从 2048 原立绘按整数倍降采样出 256 宽的新母图，"
+             "比现在的 105 宽大一倍多，关节处的细节才看得见"],
+            ["素材来源",
+             "缺失的像素（关节缝、被头发和袖子挡住的躯干、张开的手掌、"
+             "抬起的小臂、独立袖子层）交给本机 ComfyUI 补；"
+             "它只负责出静态素材，不出动画"],
+            ["招手怎么做",
+             "招手时把提灯杖杵在地上，用握杖那只手招，"
+             "省掉再造一条远处手臂的工程量"],
+            ["拎起来",
+             "拖拽时把悬挂锚点从脚下换成鼠标抓点，肢体和头发自然下垂，松手落回地面"],
+        ],
+        widths=[2.6, 12.4],
+    )
+    body(doc,
+         "第一版验证挑的是整条路线里唯一没有现成代码可抄的部分："
+         "用 Java 自己画三角网格变形，看 120 Hz 的每帧预算够不够。"
+         "做法是把现有精灵图放大到屏幕上同样的大小，以髋线为折痕做弯曲，"
+         "逐帧计时两百多帧并丢掉预热帧，求值与绘制分开统计。")
+    make_table(
+        doc,
+        ["方案", "求值（顶点位移）", "绘制（逐三角形贴图）", "合计"],
+        [
+            ["网格 12×14（336 个三角形）", "0.008 ms", "0.997 ms", "约 1.0 ms"],
+            ["网格 24×28（1344 个三角形）", "0.009 ms", "2.233 ms", "约 2.2 ms"],
+            ["对照：整图直贴（现在的做法）", "—", "0.077 ms", "0.08 ms"],
+        ],
+        widths=[5.8, 3.4, 3.6, 2.2],
+        aligns=["l", "c", "c", "c"],
+    )
+    body(doc,
+         "每帧预算是 8.33 ms。两种网格密度分别占约 12% 和 27%，都留得住；"
+         "求值几乎不花时间，代价全在逐三角形贴图。"
+         "结论是继续走蒙皮路线，不退回「分段刚体」那条备选，"
+         "正式实现时按「关节附近加密、其余稀疏」来分配三角形。")
+    if mesh_figure_path and os.path.exists(mesh_figure_path):
+        picture = doc.add_paragraph()
+        picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        picture.paragraph_format.space_before = Pt(10)
+        picture.paragraph_format.space_after = Pt(4)
+        picture.add_run().add_picture(mesh_figure_path, width=Cm(15.0))
+        caption = doc.add_paragraph()
+        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        caption.paragraph_format.space_after = Pt(10)
+        run = caption.add_run("图 2　网格变形验收：上排是弯曲结果，下排叠了网格线；"
+                              "四列依次是 0、15、30、45 度，关节处都是连续弧线，没有缺口")
+        set_run(run, size=9)
+    body(doc,
+         "下一步按方案里的任务顺序推进：先搭骨树与链式动力学，"
+         "再把踱步等现有动作迁到骨架上，然后做拎起来（用现有素材就能做完），"
+         "最后做美术返工与招手。")
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
     return out_path
@@ -459,8 +533,9 @@ def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--out", required=True)
     parser.add_argument("--figure", default="")
+    parser.add_argument("--figure-mesh", default="")
     args = parser.parse_args()
-    path = build(args.out, args.figure)
+    path = build(args.out, args.figure, args.figure_mesh)
     print("已生成:", path)
 
 
