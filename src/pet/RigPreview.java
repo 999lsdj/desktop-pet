@@ -4,6 +4,7 @@ import java.awt.AlphaComposite;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Point;
+import java.awt.geom.Point2D;
 import java.awt.RenderingHints;
 import java.awt.image.BufferedImage;
 import java.nio.file.Path;
@@ -57,6 +58,145 @@ public final class RigPreview {
         ImageIO.write(meshCheckSheet(sprite2x), "png", meshOut.toFile());
         System.out.println("mesh check -> " + meshOut);
         meshBench(sprite2x);
+
+        Path skelOut = Paths.get("_tmp", "shots", "skeleton-check.png").toAbsolutePath();
+        ImageIO.write(skeletonCheckSheet(sprite2x, rig), "png", skelOut.toFile());
+        System.out.println("skeleton check -> " + skelOut);
+        skeletonSelfCheck(rig);
+        ikSelfCheck(rig);
+    }
+
+    /** 骨架验收图：静止姿态、摆过腿和杖的姿态、以及用 IK 够到目标点的姿态。 */
+    private static BufferedImage skeletonCheckSheet(BufferedImage sprite, BodyRig rig) {
+        int tileW = 300;
+        int tileH = 340;
+        BufferedImage sheet = new BufferedImage(tileW * 3, tileH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+        g.setColor(new Color(0xF2F5FA));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+
+        for (int tile = 0; tile < 3; tile++) {
+            Skeleton skel = Skeleton.from(rig);
+            Point2D.Double target = null;
+            if (tile == 1) {
+                // 摆腿与甩灯：验证父子级联——小腿跟着大腿动，提灯跟着手走
+                skel.setDelta("thighNear", 25);
+                skel.setDelta("shinNear", -35);
+                skel.setDelta("thighFar", -20);
+                skel.setDelta("torso", 6);
+                skel.update();
+                skel.setDelta("staff", 18);
+                skel.update();
+            } else if (tile == 2) {
+                // 用 IK 让手够一个目标点，提灯作为子骨会自动跟过去
+                Point2D.Double shoulder = skel.start("upperArm");
+                target = new Point2D.Double(rig.grip().x + 26, rig.grip().y - 30);
+                Ik.Solution sol = Ik.solve(shoulder.x, shoulder.y,
+                        skel.bone("upperArm").lengthPx, skel.bone("foreArm").lengthPx,
+                        target.x, target.y, true);
+                skel.aim("upperArm", sol.firstWorldDeg);
+                skel.aim("foreArm", sol.secondWorldDeg);
+            }
+
+            double offX = tile * tileW + (tileW - sprite.getWidth()) / 2.0;
+            double offY = (tileH - sprite.getHeight()) / 2.0;
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            // 角色画淡一点，否则骨线压在花纹上根本看不清
+            g2.setComposite(AlphaComposite.SrcOver.derive(0.4f));
+            g2.drawImage(sprite, (int) Math.round(offX), (int) Math.round(offY), null);
+            g2.setComposite(AlphaComposite.SrcOver);
+            drawSkeleton(g2, skel, offX, offY);
+            if (target != null) {
+                g2.setColor(new Color(20, 140, 60));
+                double tx = offX + target.x * SCALE;
+                double ty = offY + target.y * SCALE;
+                g2.drawLine((int) tx - 7, (int) ty, (int) tx + 7, (int) ty);
+                g2.drawLine((int) tx, (int) ty - 7, (int) tx, (int) ty + 7);
+            }
+            g2.dispose();
+        }
+        g.dispose();
+        return sheet;
+    }
+
+    /**
+     * 把骨架画在角色上面：骨头是蓝线，关节是橙点，根节点大一点。
+     * 骨架坐标是原生像素（与 BodyRig 一致），这里按 SPRITE_SCALE 放大到和精灵图同一尺度。
+     */
+    private static void drawSkeleton(Graphics2D g, Skeleton skel, double offX, double offY) {
+        g.setStroke(new java.awt.BasicStroke(2f));
+        for (String name : skel.names()) {
+            Point2D.Double a = skel.start(name);
+            Point2D.Double b = skel.tip(name);
+            boolean root = skel.bone(name).parent == null;
+            g.setColor(root ? new Color(150, 60, 200) : new Color(40, 90, 200));
+            g.drawLine((int) Math.round(offX + a.x * SCALE), (int) Math.round(offY + a.y * SCALE),
+                    (int) Math.round(offX + b.x * SCALE), (int) Math.round(offY + b.y * SCALE));
+            if (!root) {
+                g.setColor(new Color(240, 140, 30));
+                g.fillOval((int) Math.round(offX + a.x * SCALE) - 3,
+                        (int) Math.round(offY + a.y * SCALE) - 3, 6, 6);
+            }
+        }
+        Point2D.Double rootStart = skel.start("root");
+        g.setColor(new Color(150, 60, 200));
+        g.fillOval((int) Math.round(offX + rootStart.x * SCALE) - 5,
+                (int) Math.round(offY + rootStart.y * SCALE) - 5, 10, 10);
+    }
+
+    /** 骨架自检：静止姿态下，髋部、握点、杖底必须与拆件坐标重合。 */
+    private static void skeletonSelfCheck(BodyRig rig) {
+        Skeleton skel = Skeleton.from(rig);
+        double worst = 0;
+        worst = Math.max(worst, gap(skel.start("thighNear"), rig.hip(0), "髋(近)"));
+        worst = Math.max(worst, gap(skel.start("thighFar"), rig.hip(1), "髋(远)"));
+        worst = Math.max(worst, gap(skel.tip("foreArm"), rig.grip(), "握点"));
+        worst = Math.max(worst, gap(skel.tip("staff"), rig.staffFoot(), "杖底"));
+        Log.info(String.format("骨架自检 关节与拆件坐标最大偏差 %.6f 原生像素，骨头 %d 根",
+                worst, skel.names().size()));
+    }
+
+    private static double gap(Point2D.Double a, Point2D b, String label) {
+        double d = a.distance(b);
+        if (d > 0.001) {
+            Log.error("骨架自检 关节对不上: " + label + " 偏差 " + d, null);
+        }
+        return d;
+    }
+
+    /** IK 自检：随机目标点，解出来再正算一遍，看末端误差；另外验证超出范围时夹到最长伸展。 */
+    private static void ikSelfCheck(BodyRig rig) {
+        Skeleton skel = Skeleton.from(rig);
+        double len1 = skel.bone("upperArm").lengthPx;
+        double len2 = skel.bone("foreArm").lengthPx;
+        Point2D.Double shoulder = skel.start("upperArm");
+        java.util.Random random = new java.util.Random(20261015L);
+        double worst = 0;
+        int reached = 0;
+        for (int i = 0; i < 200; i++) {
+            double targetX = shoulder.x + (random.nextDouble() * 2 - 1) * 30;
+            double targetY = shoulder.y + (random.nextDouble() * 2 - 1) * 30;
+            Ik.Solution sol = Ik.solve(shoulder.x, shoulder.y, len1, len2, targetX, targetY,
+                    random.nextBoolean());
+            skel.aim("upperArm", sol.firstWorldDeg);
+            skel.aim("foreArm", sol.secondWorldDeg);
+            if (sol.reached) {
+                reached++;
+                worst = Math.max(worst, skel.tip("foreArm").distance(targetX, targetY));
+            }
+        }
+        Ik.Solution far = Ik.solve(shoulder.x, shoulder.y, len1, len2,
+                shoulder.x + 500, shoulder.y, true);
+        skel.aim("upperArm", far.firstWorldDeg);
+        skel.aim("foreArm", far.secondWorldDeg);
+        double farReach = skel.tip("foreArm").distance(shoulder);
+        Log.info(String.format("IK 自检 %d 组目标（%d 组可达）末端最大误差 %.6f 设备像素；"
+                        + "超出范围时夹到 %.3f 像素，理论最长伸展 %.3f",
+                reached, reached, worst, farReach, len1 + len2));
     }
 
     /** 与桌宠一致的整数倍最近邻放大，让变形验收和屏幕上看到的是同一尺寸。 */

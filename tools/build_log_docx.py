@@ -118,7 +118,7 @@ def heading(doc, text, level=1):
     return paragraph
 
 
-def build(out_path, figure_path, mesh_figure_path=""):
+def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
     doc = Document()
 
     style = doc.styles["Normal"]
@@ -520,9 +520,30 @@ def build(out_path, figure_path, mesh_figure_path=""):
                               "四列依次是 0、15、30、45 度，关节处都是连续弧线，没有缺口")
         set_run(run, size=9)
     body(doc,
-         "下一步按方案里的任务顺序推进：先搭骨树与链式动力学，"
-         "再把踱步等现有动作迁到骨架上，然后做拎起来（用现有素材就能做完），"
-         "最后做美术返工与招手。")
+         "第二组接着把骨树、双骨 IK 和说明文档做完（29 项任务里已完成 6 项）。"
+         "骨架没有另写一套坐标，髋部、握点、杖底三个关节直接读拆件的值，"
+         "所以「骨架和拆件对齐」是结构上的，不靠两处常量互相凑。")
+    if skeleton_figure_path and os.path.exists(skeleton_figure_path):
+        picture = doc.add_paragraph()
+        picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        picture.paragraph_format.space_before = Pt(10)
+        picture.paragraph_format.space_after = Pt(4)
+        picture.add_run().add_picture(skeleton_figure_path, width=Cm(15.0))
+        caption = doc.add_paragraph()
+        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        caption.paragraph_format.space_after = Pt(10)
+        run = caption.add_run("图 3　骨架验收：角色画成半透明，蓝线是骨头、橙点是关节、紫点是根节点；"
+                              "三格分别是静止姿态、摆腿甩灯、用 IK 够目标点（绿十字）")
+        set_run(run, size=9)
+    body(doc,
+         "每项都留了可复跑的自检。改完坐标跑一次预览工具，日志里会打出"
+         "「骨架自检 关节与拆件坐标最大偏差 0.000000 原生像素」和"
+         "「IK 自检 186 组目标 末端最大误差 0.000000 设备像素」；"
+         "肩关节与肘关节在现有扁平立绘上看不出来，暂时按估计值放，"
+         "等美术返工做出分层部件后再量真实位置。")
+    body(doc,
+         "下一步是把网格变形接进桌宠的绘制路径，再把踱步等现有动作迁到骨架上，"
+         "然后做拎起来（用现有素材就能做完），最后做美术返工与招手。")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
@@ -534,8 +555,9 @@ def main():
     parser.add_argument("--out", required=True)
     parser.add_argument("--figure", default="")
     parser.add_argument("--figure-mesh", default="")
+    parser.add_argument("--figure-skeleton", default="")
     args = parser.parse_args()
-    path = build(args.out, args.figure, args.figure_mesh)
+    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton)
     print("已生成:", path)
 
 
