@@ -14,7 +14,7 @@ param(
   [Parameter(Mandatory = $true)][string]$In,
   [Parameter(Mandatory = $true)][string]$OutDir,
   [int]$BgThreshold = 238,
-  # 背景判据：auto 先从四角取样判断深浅；white 只认浅色背景；black 只认深色背景
+  # alpha 保留输入透明度；auto 判断背景深浅；white / black 强制按背景色抠底
   [string]$BgMode = 'auto',
   # 深色背景的通道上限：三个通道都不超过它才算背景
   [int]$BgDarkThreshold = 20,
@@ -63,13 +63,20 @@ if ($BgMode -eq 'auto') {
   $avgLuma = $sumLuma / $samples
   $BgMode = if ($avgLuma -lt 128) { 'black' } else { 'white' }
   Write-Output ("background mode: auto -> {0} (corner luma {1:N1})" -f $BgMode, $avgLuma)
-} elseif ($BgMode -ne 'white' -and $BgMode -ne 'black') {
-  throw "BgMode 只能是 auto / white / black，收到的是 '$BgMode'"
+} elseif ($BgMode -notin @('white', 'black', 'alpha')) {
+  throw "BgMode 只能是 auto / white / black / alpha，收到的是 '$BgMode'"
 }
 
 $isBg = New-Object 'bool[]' ($W * $H)
 $stack = New-Object 'System.Collections.Generic.Stack[int]'
 
+if ($BgMode -eq 'alpha') {
+  for ($y = 0; $y -lt $H; $y++) {
+    for ($x = 0; $x -lt $W; $x++) {
+      $isBg[$y * $W + $x] = ($bytes[$y * $stride + $x * 4 + 3] -eq 0)
+    }
+  }
+} else {
 for ($x = 0; $x -lt $W; $x++) {
   $stack.Push($x)
   $stack.Push(($H - 1) * $W + $x)
@@ -103,6 +110,8 @@ while ($stack.Count -gt 0) {
   if ($x -lt $W - 1) { $q = $p + 1; if (-not $isBg[$q]) { $stack.Push($q) } }
   if ($y -gt 0)      { $q = $p - $W; if (-not $isBg[$q]) { $stack.Push($q) } }
   if ($y -lt $H - 1) { $q = $p + $W; if (-not $isBg[$q]) { $stack.Push($q) } }
+}
+
 }
 
 # 2. 应用透明度 + 统计包围盒
@@ -170,6 +179,10 @@ Write-Output "auto block guess: ${bestK}x${bestK} (align $([math]::Round($bestSc
 
 # 4. 按块降采样到原生分辨率（显式指定优先；纯色块网格常用 4 或 5）
 $k = if ($BlockSize -gt 0) { $BlockSize } else { $bestK }
+if ($W % $k -ne 0 -or $H % $k -ne 0) {
+  throw "降采样倍率 $k 必须整除原画布 ${W}x${H}"
+}
+if ($maxX -lt $minX -or $maxY -lt $minY) { throw '没有找到非透明角色内容' }
 Write-Output "using block: ${k}x${k}"
 $cw = [int]([math]::Floor(($maxX - $minX + 1) / $k))
 $ch = [int]([math]::Floor(($maxY - $minY + 1) / $k))
@@ -238,6 +251,20 @@ $gp.DrawImage($native, (New-Object System.Drawing.Rectangle(0, 0, ($cw * $Previe
 $gp.Dispose()
 $previewPath = Join-Path $OutDir "preview-native-${PreviewScale}x.png"
 $preview.Save($previewPath, [System.Drawing.Imaging.ImageFormat]::Png)
+
+[ordered]@{
+  source = (Resolve-Path -LiteralPath $In).Path
+  sourceSha256 = (Get-FileHash -LiteralPath $In -Algorithm SHA256).Hash.ToLowerInvariant()
+  sourceSize = @($W, $H)
+  backgroundMode = $BgMode
+  blockSize = $k
+  fullCanvasSize = @([int]($W / $k), [int]($H / $k))
+  contentBounds = @($minX, $minY, ($maxX + 1), ($maxY + 1))
+  originOffset = @($minX, $minY)
+  sampledBounds = @($minX, $minY, ($minX + $cw * $k), ($minY + $ch * $k))
+  croppedSize = @($cw, $ch)
+  sampling = 'alpha-weighted-box; floor content dimensions; nearest-neighbor display'
+} | ConvertTo-Json -Depth 3 | Set-Content -LiteralPath (Join-Path $OutDir 'manifest.json') -Encoding utf8
 
 $bmp.Dispose(); $native.Dispose(); $preview.Dispose()
 

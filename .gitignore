@@ -2,3 +2,5 @@ out/
 logs/
 _tmp/
 *.class
+__pycache__/
+*.pyc
