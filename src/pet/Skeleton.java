@@ -109,8 +109,37 @@ public final class Skeleton {
         s.add("staff", "foreArm", gripX - elbowX, gripY - elbowY,
                 angle(gripX, gripY, footX, footY), dist(gripX, gripY, footX, footY));
 
+        // 柔性链的骨头：发丝挂头顶、袖子挂肘部、袍摆挂髋部下沿。
+        // 它们的角度由 ChainRig 里的 Verlet 链每帧给出，这里只定静止姿态与骨长。
+        s.addChainBones();
+
         s.update();
         return s;
+    }
+
+    private void addChainBones() {
+        double hairX = 38.5;
+        double hairY = 8;
+        addChain("hair", hairX, hairY, 3, 12);
+        addChain("sleeve", 36, 60, 2, 10);
+        addChain("coat", 34.5, 89, 2, 12);
+    }
+
+    /** 从 (x, y) 竖直向下接出 count 节 bone 名的链，每节长度 segLen。 */
+    private void addChain(String prefix, double x, double y, int count, double segLen) {
+        String parent = null;
+        for (int i = 0; i < count; i++) {
+            String name = prefix + (i + 1);
+            if (i == 0) {
+                parent = prefix.equals("hair") ? "head" : prefix.equals("sleeve") ? "foreArm" : "torso";
+                Point2D.Double p = new Point2D.Double();
+                bones.get(parent).world.transform(new Point2D.Double(0, 0), p);
+                add(name, parent, x - p.x, y - p.y, 90, segLen);
+            } else {
+                add(name, parent, 0, segLen, 90, segLen);
+            }
+            parent = name;
+        }
     }
 
     private static double dist(double x1, double y1, double x2, double y2) {

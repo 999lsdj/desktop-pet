@@ -72,6 +72,135 @@ public final class RigPreview {
         System.out.println("skin check -> " + skinOut);
         skinSelfCheck(rig);
         chainSelfCheck();
+
+        Path chainOut = Paths.get("_tmp", "shots", "chain-check.png").toAbsolutePath();
+        ImageIO.write(chainRigSheet(rig), "png", chainOut.toFile());
+        System.out.println("chain check -> " + chainOut);
+        chainRigCheck(rig);
+    }
+
+    /** 柔性链验收图：静止、摆动中、停下后三格，链画成折线叠在角色上。 */
+    private static BufferedImage chainRigSheet(BodyRig rig) {
+        int tileW = 300;
+        int tileH = 340;
+        BufferedImage sheet = new BufferedImage(tileW * 3, tileH, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g = sheet.createGraphics();
+        g.setColor(new Color(0xF2F5FA));
+        g.fillRect(0, 0, sheet.getWidth(), sheet.getHeight());
+
+        double dt = 1.0 / 120;
+        Skeleton skel = Skeleton.from(rig);
+        ChainRig chains = new ChainRig(skel, 900);
+        // 先把链挂到位，否则第一格画出来的还是没推进过的原点
+        for (int f = 0; f < 60; f++) {
+            skel.update();
+            chains.update(dt);
+        }
+        for (int tile = 0; tile < 3; tile++) {
+            if (tile == 1) {
+                // 摆动中：躯干左右摆一秒，链被带着甩起来
+                for (int f = 0; f < 120; f++) {
+                    skel.setDelta("torso", 10 * Math.sin(2 * Math.PI * 1.0 * f * dt));
+                    skel.update();
+                    chains.update(dt);
+                }
+            } else if (tile == 2) {
+                // 停下后：躯干归零再跑几秒，链自己衰减
+                for (int f = 0; f < 480; f++) {
+                    skel.setDelta("torso", 0);
+                    skel.update();
+                    chains.update(dt);
+                }
+            }
+            double offX = tile * tileW + (tileW - rig.width() * SCALE) / 2.0;
+            double offY = (tileH - rig.height() * SCALE) / 2.0;
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                    RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
+            g2.setComposite(AlphaComposite.SrcOver.derive(0.45f));
+            g2.drawImage(scale2x(rig.original()), (int) Math.round(offX), (int) Math.round(offY), null);
+            g2.setComposite(AlphaComposite.SrcOver);
+            g2.setStroke(new java.awt.BasicStroke(2f));
+            g2.setColor(new Color(200, 60, 150));
+            for (int c = 0; c < chains.chainCount(); c++) {
+                for (int n = 0; n < chains.segmentCount(c); n++) {
+                    g2.drawLine(
+                            (int) Math.round(offX + chains.nodeX(c, n) * SCALE),
+                            (int) Math.round(offY + chains.nodeY(c, n) * SCALE),
+                            (int) Math.round(offX + chains.nodeX(c, n + 1) * SCALE),
+                            (int) Math.round(offY + chains.nodeY(c, n + 1) * SCALE));
+                }
+            }
+            g2.dispose();
+        }
+        g.dispose();
+        return sheet;
+    }
+
+    /**
+     * 柔性链自检：让躯干以 1 Hz 左右摆，看末端节点是不是滞后于挂点；
+     * 停摆之后看多久能停住。
+     */
+    private static void chainRigCheck(BodyRig rig) {
+        double dt = 1.0 / 120;
+        Skeleton skel = Skeleton.from(rig);
+        ChainRig chains = new ChainRig(skel, 900);
+
+        // 先静置一秒
+        for (int f = 0; f < 120; f++) {
+            skel.update();
+            chains.update(dt);
+        }
+
+        // 起步：1 Hz 摆动，先跑两秒到稳态，再取一个周期量相位差
+        for (int f = 0; f < 240; f++) {
+            skel.setDelta("torso", 10 * Math.sin(2 * Math.PI * f * dt));
+            skel.update();
+            chains.update(dt);
+        }
+        double anchorPeakX = -1e9;
+        double tipPeakX = -1e9;
+        double anchorPeakSec = 0;
+        double tipPeakSec = 0;
+        for (int f = 0; f < 120; f++) {
+            double t = (240 + f) * dt;
+            skel.setDelta("torso", 10 * Math.sin(2 * Math.PI * t));
+            skel.update();
+            chains.update(dt);
+            double ax = chains.nodeX(0, 0);
+            double tx = chains.nodeX(0, chains.segmentCount(0));
+            if (ax > anchorPeakX) {
+                anchorPeakX = ax;
+                anchorPeakSec = t;
+            }
+            if (tx > tipPeakX) {
+                tipPeakX = tx;
+                tipPeakSec = t;
+            }
+        }
+        double lagSec = tipPeakSec - anchorPeakSec;
+
+        // 停下：躯干归零，量多久能停住（所有关节落到 1 度以内）
+        double secondsToRest = -1;
+        int limit = (int) Math.round(15 / dt);
+        for (int f = 0; f < limit; f++) {
+            skel.setDelta("torso", 0);
+            skel.update();
+            chains.update(dt);
+            if (f > 120 && chains.maxJointAngleDeg() < 1.0) {
+                secondsToRest = f * dt;
+                break;
+            }
+        }
+        Log.info(String.format("柔性链自检 %d 条链：摆幅峰值 挂点 %.2f → 末端 %.2f 原生像素，"
+                        + "末端滞后 %.3f 秒；停摆后 %.2f 秒内所有关节落到 1 度以内",
+                chains.chainCount(), anchorPeakX, tipPeakX, lagSec, secondsToRest));
+        if (lagSec <= 0.02) {
+            Log.error("柔性链自检不通过：末端没有滞后于挂点（滞后 " + lagSec + " 秒）", null);
+        }
+        if (secondsToRest < 0) {
+            Log.error("柔性链自检不通过：停摆 15 秒仍未静止", null);
+        }
     }
 
     /**

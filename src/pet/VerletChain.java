@@ -17,7 +17,7 @@ public final class VerletChain {
     private final double segLen;
     private final double maxAngleDeg;
     /** 每秒保留的速度比例的对数（1/秒），越大停得越快 */
-    private final double damping;
+    private double damping;
     private final double[] x;
     private final double[] y;
     private final double[] prevX;
@@ -54,6 +54,14 @@ public final class VerletChain {
     public void setAnchor(double x, double y) {
         this.anchorX = x;
         this.anchorY = y;
+    }
+
+    /** 调阻尼（1/秒）。参数来自配置，可以在运行中改。 */
+    public void setDamping(double damping) {
+        if (damping < 0) {
+            throw new IllegalArgumentException("阻尼不能是负数");
+        }
+        this.damping = damping;
     }
 
     /**
