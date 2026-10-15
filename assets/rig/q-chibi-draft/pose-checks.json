@@ -1,0 +1,817 @@
+[
+  {
+    "joint": "neck",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "neck",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -70,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -65,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -60,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -55,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -50,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -45,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -40,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderNear",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -80,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -75,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -70,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -65,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -60,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -55,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -50,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -45,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -40,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowNear",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristNear",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "shoulderFar",
+    "angle": 35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "elbowFar",
+    "angle": 35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "wristFar",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipNear",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 40,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeNear",
+    "angle": 45,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleNear",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": -25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "hipFar",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 25,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 30,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 35,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 40,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "kneeFar",
+    "angle": 45,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": -20,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": -15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": -10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": -5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": 0,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": 5,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": 10,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": 15,
+    "gap_pixels": 0
+  },
+  {
+    "joint": "ankleFar",
+    "angle": 20,
+    "gap_pixels": 0
+  }
+]

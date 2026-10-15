@@ -1,0 +1,13 @@
+{
+  "status": "needs_inpaint_and_pose_review",
+  "reassembly_changed_rgba_pixels": 0,
+  "parts": 22,
+  "inpaint_jobs": 10,
+  "missing_layer_pixels": 944,
+  "joint_samples": 163,
+  "joint_samples_with_gaps": 66,
+  "max_joint_gap_pixels": 4,
+  "visual_review": "pending",
+  "runtime_ready": false,
+  "notes": "可见像素分层已输出；未补齐层不满足正式关节验收。检查图只测单关节刚性摆位，不替代后续蒙皮和组合动作验收。"
+}

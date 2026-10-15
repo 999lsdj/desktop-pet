@@ -6,7 +6,9 @@
 """
 
 import argparse
+import json
 import os
+from pathlib import Path
 from docx import Document
 from docx.enum.section import WD_SECTION
 from docx.enum.table import WD_TABLE_ALIGNMENT
@@ -111,6 +113,7 @@ def body(doc, text, size=10.5, space_after=8):
 
 def heading(doc, text, level=1):
     paragraph = doc.add_paragraph()
+    paragraph.paragraph_format.keep_with_next = True
     paragraph.paragraph_format.space_before = Pt(14 if level == 1 else 10)
     paragraph.paragraph_format.space_after = Pt(6)
     run = paragraph.add_run(text)
@@ -118,7 +121,7 @@ def heading(doc, text, level=1):
     return paragraph
 
 
-def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
+def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", parts_dir=""):
     doc = Document()
 
     style = doc.styles["Normal"]
@@ -133,14 +136,23 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
     section.right_margin = Cm(2.2)
 
     # 标题
-    title = doc.add_paragraph()
+    title = doc.add_paragraph(style="Title")
+    for node in doc.styles["Title"].element.findall(".//" + qn("w:pBdr")):
+        node.getparent().remove(node)
+    # 默认 Word 模板可能给 Title 继承蓝色底线，显式关闭边框。
+    borders = OxmlElement("w:pBdr")
+    for side in ("top", "bottom", "left", "right", "between"):
+        edge = OxmlElement("w:" + side)
+        edge.set(qn("w:val"), "nil")
+        borders.append(edge)
+    title._p.get_or_add_pPr().append(borders)
     title.paragraph_format.space_after = Pt(4)
     run = title.add_run("桌宠项目开发进度日志")
     set_run(run, size=20, bold=True)
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(14)
-    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-15（骨骼动画方案落成、第一版验证通过）")
+    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-15（Q 版分层与补洞候选验证）")
     set_run(run, size=10.5)
 
     body(doc,
@@ -151,7 +163,9 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
          "第五步「让桌宠动起来」也已完成，并在被退回一次后返工做对；"
          "计划表、常用文件、视频网站三个功能还只是占位按钮，等待后续实现。"
          "最新一轮把目标提到骨骼动画（关节要能连续弯），并新增被鼠标拎起来与招手两个动作，"
-         "方案已经落成，第一版性能验证通过，细节见第十二节。")
+         "性能验证已经通过，当前正制作用户确认的 Q 版分层素材；"
+         "ComfyUI 已就绪，分层与补洞候选仍需通过正式验收。OpenSpec 已完成 12/29 项，"
+         "本轮进展与剩余问题见第十三节。")
 
     heading(doc, "一、项目目标与分步计划")
     body(doc,
@@ -278,7 +292,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
         doc,
         ["文件", "说明"],
         [
-            ["src/pet/*.java", "5 个源文件：入口、窗口、精灵、像素图标、日志"],
+            ["src/pet/*.java", "入口、窗口、精灵、骨架、蒙皮、链式动力学、图标与日志等源码"],
             ["build.ps1 / run.ps1", "编译与启动脚本"],
             ["assets/sprites/pet-base.png", "桌宠使用的精灵图（105×123 原生像素）"],
             ["assets/像素角色/", "透明母图、精灵图与放大预览"],
@@ -290,8 +304,9 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
         widths=[6.0, 9.0],
     )
 
-    heading(doc, "六、下一步计划")
+    heading(doc, "六 后续功能计划")
     body(doc,
+         "以下实用功能保留在后续计划中，当前先推进第十三节的骨骼素材工作。"
          "第二步做计划表：用一个本地数据文件保存任务、时间和完成状态，"
          "点击三角形菜单左上角的清单按钮后，在桌宠旁边展开可勾选的面板。"
          "第三步做常用文件：读取 Windows 最近使用记录，统计出现频率最高的五个文件，"
@@ -470,10 +485,10 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
              "不引入任何第三方库，编译仍然只用 JDK 自带的 javac"],
             ["形变分级",
              "只有肩、肘、髋、膝四处用蒙皮；头发、袖子、袍摆、提灯挂成链，"
-             "每节一个阻尼单摆，直接复用现有提灯单摆那段代码"],
+             "链式柔性已改为 Verlet 积分加距离约束，单摆只保留给提灯"],
             ["角色尺寸",
-             "接受美术返工：从 2048 原立绘按整数倍降采样出 256 宽的新母图，"
-             "比现在的 105 宽大一倍多，关节处的细节才看得见"],
+             "用户已确认保留当前 Q 版外观：800×800 透明原图按 5 倍整数降采样，"
+             "裁剪后仍为 105×123；2048 正常身材参考图只保留作历史实验"],
             ["素材来源",
              "缺失的像素（关节缝、被头发和袖子挡住的躯干、张开的手掌、"
              "抬起的小臂、独立袖子层）交给本机 ComfyUI 补；"
@@ -520,7 +535,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
                               "四列依次是 0、15、30、45 度，关节处都是连续弧线，没有缺口")
         set_run(run, size=9)
     body(doc,
-         "第二组接着把骨树、双骨 IK 和说明文档做完（29 项任务里已完成 6 项）。"
+         "第二组接着把骨树、双骨 IK 和说明文档做完（当时 29 项任务里已完成 6 项）。"
          "骨架没有另写一套坐标，髋部、握点、杖底三个关节直接读拆件的值，"
          "所以「骨架和拆件对齐」是结构上的，不靠两处常量互相凑。")
     if skeleton_figure_path and os.path.exists(skeleton_figure_path):
@@ -569,9 +584,43 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path=""):
          "（提灯杖会被撕成一条长条、灯笼糊到脸上），权重必须改成「先认部件、再认距离」；"
          "二是柔性链目前只验了数值上的滞后与收敛，还没和真实发丝、袖子的图形合过。")
     body(doc,
-         "下一步：把踱步等现有动作迁到骨架上、做被鼠标拎起来，"
-         "然后做美术返工（从 2048 原立绘重出母图并拆件，用本机 ComfyUI 补缺失的像素），"
-         "最后做招手。网格蒙皮接进桌宠这一步要排到拆件之后，因为权重得按部件来分。")
+         "当前顺序已调整为：先完成 Q 版正式分层与缺口补齐，再接入蒙皮、迁移既有动作，"
+         "随后实现拎起和招手，最后验收包络与命中。分层是后续工作的前置条件，"
+         "因为蒙皮权重必须按部件约束。")
+
+    heading(doc, "十三 Q 版分层与补洞阶段进度")
+    body(doc,
+         "2026 年 10 月 15 日，用户确认沿用当前 Q 版持杖外观。正式来源固定为 "
+         "assets/像素角色/master-transparent-800.png；原图的内容采样范围是 "
+         "[139,81,664,696)，按 5 倍降采样得到 105×123 精灵，与当前运行素材逐像素一致。"
+         "SDXL 补洞模型已完整下载并通过 SHA-256 校验，两次衣袖冒烟执行和 6 项基础测试通过。")
+    body(doc,
+         "本轮把原来的四矩形拆件扩展为按轮廓定义的 22 个候选部件，分开手、杖、提灯、"
+         "头部、双侧长发、衣摆、袖子和四肢。两条小臂在原图中被衣袖遮挡，"
+         "初始层为空，必须通过补洞生成，不能把衣袖当成已经存在的小臂。"
+         "每个部件记录来源、枢轴、骨头名、可见范围和缺失蒙版；关节余量默认 3 个原生像素，"
+         "远侧脚踝为 4 个像素。")
+    if parts_dir:
+        evidence = Path(parts_dir)
+        split = json.loads((evidence / "report.json").read_text(encoding="utf-8"))
+        filled = json.loads((evidence / "inpaint-report.json").read_text(encoding="utf-8"))
+        make_table(doc, ["检查项", "本轮结果"], [
+            ["原姿态可见层重组", f'全部 RGBA 像素差异 {split["reassembly_changed_rgba_pixels"]}，包含半透明边缘'],
+            ["补洞输入", f'{split["inpaint_jobs"]} 个部件任务，合计 {split["missing_layer_pixels"]} 个待补层像素（不同层分别计数）'],
+            ["补洞执行", f'已生成 {len(filled["completed"])} 个部件候选，逐项保留输入、蒙版、工作流、结果和像素检查报告'],
+            ["补洞前关节扫描", f'{split["joint_samples"]} 个单关节角度样本，{split["joint_samples_with_gaps"]} 个样本存在连接处缺口'],
+            ["补洞后关节扫描", f'{filled["joint_samples"]} 个单关节角度样本，{filled["joint_samples_with_gaps"]} 个样本仍有缺口；不替代蒙皮与组合动作验收'],
+            ["补层后原姿态重组", f'{filled["rest_changed_rgba_pixels"]} 个 RGBA 像素发生变化；仍须检查移动时的层级与接缝'],
+        ], widths=[4.0, 11.0])
+    body(doc,
+         "新缺口统计只检查关节连接区域，排除了部件移动后正常腾出的背景。旧报告里整张图的"
+         "轮廓差值不能当作隐藏像素的精确数量。初始可见层可以无损重组，但 AI 候选的层级覆盖、"
+         "材质接缝和张开手掌尚未全部验收；当前不替换运行中的桌宠，也不勾选任务 7.1、7.2、7.3。"
+         "本轮同步日志不等于完成任务 9.4 的最终收尾。")
+    body(doc,
+         "下一步优先修正候选分层的遮挡关系，逐部件检查关节补图；补齐独立袖子与张开手掌，"
+         "完成全产线重复执行和极限姿态验收后，再把素材接入 PetWindow。"
+         "项目已设置每 30 分钟持续追踪，仅在进展、失败或需要处理的事项发生变化时通知。")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
@@ -584,8 +633,9 @@ def main():
     parser.add_argument("--figure", default="")
     parser.add_argument("--figure-mesh", default="")
     parser.add_argument("--figure-skeleton", default="")
+    parser.add_argument("--parts-dir", default="", help="包含分层与补洞报告的产出目录")
     args = parser.parse_args()
-    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton)
+    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton, args.parts_dir)
     print("已生成:", path)
 
 

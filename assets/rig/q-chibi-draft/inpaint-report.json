@@ -1,0 +1,103 @@
+{
+  "status": "generated_pending_review",
+  "completed": [
+    {
+      "part": "torso",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 10649,
+        "mask_pixels": 10650
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "thighNear",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 725,
+        "mask_pixels": 725
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "thighFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 724,
+        "mask_pixels": 725
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "shinNear",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 725,
+        "mask_pixels": 725
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "shinFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 850,
+        "mask_pixels": 850
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "foreArm",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 2775,
+        "mask_pixels": 2775
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "upperArm",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 1550,
+        "mask_pixels": 1550
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "foreArmFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 3373,
+        "mask_pixels": 3375
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "upperArmFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 1300,
+        "mask_pixels": 1300
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "staff",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 924,
+        "mask_pixels": 925
+      },
+      "visual_review": "pending"
+    }
+  ],
+  "runtime_ready": false,
+  "visual_review": "pending",
+  "manifest_sha256": "ab58da7aef9f09f60237ab82c0c073ac9246274a017c3f5c2d31a455f39eb1e1",
+  "rest_changed_rgba_pixels": 0,
+  "joint_samples": 163,
+  "joint_samples_with_gaps": 0,
+  "max_joint_gap_pixels": 0,
+  "remaining_jobs": []
+}
