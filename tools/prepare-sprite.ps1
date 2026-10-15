@@ -14,6 +14,10 @@ param(
   [Parameter(Mandatory = $true)][string]$In,
   [Parameter(Mandatory = $true)][string]$OutDir,
   [int]$BgThreshold = 238,
+  # 背景判据：auto 先从四角取样判断深浅；white 只认浅色背景；black 只认深色背景
+  [string]$BgMode = 'auto',
+  # 深色背景的通道上限：三个通道都不超过它才算背景
+  [int]$BgDarkThreshold = 20,
   [int]$PreviewScale = 4,
   [int]$MaxBlock = 16,
   [int]$BlockSize = 0
@@ -41,6 +45,28 @@ $bytes = New-Object byte[] ($stride * $H)
 [System.Runtime.InteropServices.Marshal]::Copy($data.Scan0, $bytes, 0, $bytes.Length)
 
 # 1. 泛洪：与边界连通的接近白色像素 -> 背景
+# 先定背景判据：黑底立绘和浅底立绘的"背景"是反过来的
+if ($BgMode -eq 'auto') {
+  $sumLuma = 0.0
+  $samples = 0
+  foreach ($cx in 0, ($W - 16)) {
+    foreach ($cy in 0, ($H - 16)) {
+      for ($yy = 0; $yy -lt 16; $yy++) {
+        for ($xx = 0; $xx -lt 16; $xx++) {
+          $o = ($cy + $yy) * $stride + ($cx + $xx) * 4
+          $sumLuma += ($bytes[$o] + $bytes[$o + 1] + $bytes[$o + 2]) / 3.0
+          $samples++
+        }
+      }
+    }
+  }
+  $avgLuma = $sumLuma / $samples
+  $BgMode = if ($avgLuma -lt 128) { 'black' } else { 'white' }
+  Write-Output ("background mode: auto -> {0} (corner luma {1:N1})" -f $BgMode, $avgLuma)
+} elseif ($BgMode -ne 'white' -and $BgMode -ne 'black') {
+  throw "BgMode 只能是 auto / white / black，收到的是 '$BgMode'"
+}
+
 $isBg = New-Object 'bool[]' ($W * $H)
 $stack = New-Object 'System.Collections.Generic.Stack[int]'
 
@@ -60,10 +86,17 @@ while ($stack.Count -gt 0) {
   $y = [int](($p - $x) / $W)
   $o = $y * $stride + $x * 4
   $b = $bytes[$o]; $g = $bytes[$o + 1]; $r = $bytes[$o + 2]
-  $m = $r
-  if ($g -lt $m) { $m = $g }
-  if ($b -lt $m) { $m = $b }
-  if ($m -lt $BgThreshold) { continue }
+  if ($BgMode -eq 'white') {
+    $m = $r
+    if ($g -lt $m) { $m = $g }
+    if ($b -lt $m) { $m = $b }
+    if ($m -lt $BgThreshold) { continue }
+  } else {
+    $m = $r
+    if ($g -gt $m) { $m = $g }
+    if ($b -gt $m) { $m = $b }
+    if ($m -gt $BgDarkThreshold) { continue }
+  }
 
   $isBg[$p] = $true
   if ($x -gt 0)      { $q = $p - 1; if (-not $isBg[$q]) { $stack.Push($q) } }
@@ -182,6 +215,8 @@ for ($ny = 0; $ny -lt $ch; $ny++) {
 $native.UnlockBits($nativeData)
 
 Write-Output "native sprite: ${cw}x${ch}"
+Write-Output ("downsample: block {0}, full canvas {1}x{2} (= {3} 的 1/{0}), content crop {4}x{5}" -f `
+  $k, [int]($W / $k), [int]($H / $k), $W, $cw, $ch)
 
 # 5. 保存
 New-Item -ItemType Directory -Force -Path $OutDir | Out-Null
