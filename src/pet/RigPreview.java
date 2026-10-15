@@ -34,6 +34,7 @@ public final class RigPreview {
         Path root = Paths.get("").toAbsolutePath();
         Log.init(root.resolve("logs").resolve("pet.log"));
 
+        Config config = new Config(root.resolve("config.properties"));
         Path spritePath = Paths.get("assets", "sprites", "pet-base.png").toAbsolutePath();
         BodyRig rig = BodyRig.load(spritePath);
 
@@ -74,13 +75,13 @@ public final class RigPreview {
         chainSelfCheck();
 
         Path chainOut = Paths.get("_tmp", "shots", "chain-check.png").toAbsolutePath();
-        ImageIO.write(chainRigSheet(rig), "png", chainOut.toFile());
+        ImageIO.write(chainRigSheet(rig, config), "png", chainOut.toFile());
         System.out.println("chain check -> " + chainOut);
-        chainRigCheck(rig);
+        chainRigCheck(rig, config);
     }
 
     /** 柔性链验收图：静止、摆动中、停下后三格，链画成折线叠在角色上。 */
-    private static BufferedImage chainRigSheet(BodyRig rig) {
+    private static BufferedImage chainRigSheet(BodyRig rig, Config config) {
         int tileW = 300;
         int tileH = 340;
         BufferedImage sheet = new BufferedImage(tileW * 3, tileH, BufferedImage.TYPE_INT_ARGB);
@@ -90,7 +91,7 @@ public final class RigPreview {
 
         double dt = 1.0 / 120;
         Skeleton skel = Skeleton.from(rig);
-        ChainRig chains = new ChainRig(skel, 900);
+        ChainRig chains = new ChainRig(skel, config);
         // 先把链挂到位，否则第一格画出来的还是没推进过的原点
         for (int f = 0; f < 60; f++) {
             skel.update();
@@ -141,10 +142,10 @@ public final class RigPreview {
      * 柔性链自检：让躯干以 1 Hz 左右摆，看末端节点是不是滞后于挂点；
      * 停摆之后看多久能停住。
      */
-    private static void chainRigCheck(BodyRig rig) {
+    private static void chainRigCheck(BodyRig rig, Config config) {
         double dt = 1.0 / 120;
         Skeleton skel = Skeleton.from(rig);
-        ChainRig chains = new ChainRig(skel, 900);
+        ChainRig chains = new ChainRig(skel, config);
 
         // 先静置一秒
         for (int f = 0; f < 120; f++) {
@@ -158,48 +159,74 @@ public final class RigPreview {
             skel.update();
             chains.update(dt);
         }
-        double anchorPeakX = -1e9;
-        double tipPeakX = -1e9;
-        double anchorPeakSec = 0;
-        double tipPeakSec = 0;
+        int chainCount = chains.chainCount();
+        double[] anchorPeak = new double[chainCount];
+        double[] anchorPeakSec = new double[chainCount];
+        double[] anchorMinX = new double[chainCount];
+        double[] anchorMaxX = new double[chainCount];
+        double[] tipPeak = new double[chainCount];
+        double[] tipPeakSec = new double[chainCount];
+        double[] settledSec = new double[chainCount];
+        java.util.Arrays.fill(anchorPeak, -1e9);
+        java.util.Arrays.fill(anchorMinX, 1e9);
+        java.util.Arrays.fill(anchorMaxX, -1e9);
+        java.util.Arrays.fill(tipPeak, -1e9);
+        java.util.Arrays.fill(settledSec, -1);
         for (int f = 0; f < 120; f++) {
             double t = (240 + f) * dt;
             skel.setDelta("torso", 10 * Math.sin(2 * Math.PI * t));
             skel.update();
             chains.update(dt);
-            double ax = chains.nodeX(0, 0);
-            double tx = chains.nodeX(0, chains.segmentCount(0));
-            if (ax > anchorPeakX) {
-                anchorPeakX = ax;
-                anchorPeakSec = t;
-            }
-            if (tx > tipPeakX) {
-                tipPeakX = tx;
-                tipPeakSec = t;
+            for (int c = 0; c < chainCount; c++) {
+                double ax = chains.nodeX(c, 0);
+                double tx = chains.nodeX(c, chains.segmentCount(c));
+                anchorMinX[c] = Math.min(anchorMinX[c], ax);
+                anchorMaxX[c] = Math.max(anchorMaxX[c], ax);
+                if (ax > anchorPeak[c]) {
+                    anchorPeak[c] = ax;
+                    anchorPeakSec[c] = t;
+                }
+                if (tx > tipPeak[c]) {
+                    tipPeak[c] = tx;
+                    tipPeakSec[c] = t;
+                }
             }
         }
-        double lagSec = tipPeakSec - anchorPeakSec;
 
-        // 停下：躯干归零，量多久能停住（所有关节落到 1 度以内）
-        double secondsToRest = -1;
+        // 停下：躯干归零，逐条链量多久能停住（关节落到 1 度以内）
         int limit = (int) Math.round(15 / dt);
         for (int f = 0; f < limit; f++) {
             skel.setDelta("torso", 0);
             skel.update();
             chains.update(dt);
-            if (f > 120 && chains.maxJointAngleDeg() < 1.0) {
-                secondsToRest = f * dt;
-                break;
+            if (f > 120) {
+                for (int c = 0; c < chainCount; c++) {
+                    if (settledSec[c] < 0 && chains.maxJointAngleDeg(c) < 1.0) {
+                        settledSec[c] = f * dt;
+                    }
+                }
             }
         }
-        Log.info(String.format("柔性链自检 %d 条链：摆幅峰值 挂点 %.2f → 末端 %.2f 原生像素，"
-                        + "末端滞后 %.3f 秒；停摆后 %.2f 秒内所有关节落到 1 度以内",
-                chains.chainCount(), anchorPeakX, tipPeakX, lagSec, secondsToRest));
-        if (lagSec <= 0.02) {
-            Log.error("柔性链自检不通过：末端没有滞后于挂点（滞后 " + lagSec + " 秒）", null);
+
+        StringBuilder line = new StringBuilder("柔性链自检（参数取自 config.properties）");
+        boolean passed = true;
+        for (int c = 0; c < chainCount; c++) {
+            double lag = tipPeakSec[c] - anchorPeakSec[c];
+            double anchorSpan = anchorMaxX[c] - anchorMinX[c];
+            line.append(String.format(" | %s 挂点横移 %.1f 像素、末端峰值 %.1f，滞后 %.3f 秒，停摆 %.2f 秒",
+                    chains.chainName(c), anchorSpan, tipPeak[c], lag, settledSec[c]));
+            // 挂点横向几乎不动的链（比如袍摆挂在髋侧，转躯干时它主要上下动），
+            // 用横向峰值量滞后没有意义，只判它有没有停住
+            if (anchorSpan > 2 && lag <= 0.02) {
+                passed = false;
+            }
+            if (settledSec[c] < 0) {
+                passed = false;
+            }
         }
-        if (secondsToRest < 0) {
-            Log.error("柔性链自检不通过：停摆 15 秒仍未静止", null);
+        Log.info(line.toString());
+        if (!passed) {
+            Log.error("柔性链自检不通过：有链没有滞后于挂点，或 15 秒内没停住", null);
         }
     }
 

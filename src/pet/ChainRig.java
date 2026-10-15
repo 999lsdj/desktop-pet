@@ -16,17 +16,21 @@ import java.util.List;
  */
 public final class ChainRig {
 
-    private static final String[][] CHAIN_BONES = {
-            {"hair1", "hair2", "hair3"},
-            {"sleeve1", "sleeve2"},
-            {"coat1", "coat2"},
-    };
+    /** 链名、挂在哪根骨头上、以及挂点在精灵坐标里的位置 */
+    private static final String[] NAMES = {"hair", "sleeve", "coat"};
+    private static final String[] ATTACH = {"head", "foreArm", "torso"};
+    private static final double[] ANCHOR_X = {38.5, 36, 34.5};
+    private static final double[] ANCHOR_Y = {8, 60, 89};
+    private static final int[] DEFAULT_SEGMENTS = {3, 2, 2};
+    private static final double[] DEFAULT_SEG_LEN = {12, 10, 12};
 
     private static final class Chain {
+        final String name;
         final String[] bones;
         final VerletChain sim;
 
-        Chain(String[] bones, VerletChain sim) {
+        Chain(String name, String[] bones, VerletChain sim) {
+            this.name = name;
             this.bones = bones;
             this.sim = sim;
         }
@@ -36,14 +40,40 @@ public final class ChainRig {
     private final List<Chain> chains = new ArrayList<>();
     private final double gravity;
 
-    public ChainRig(Skeleton skeleton, double gravity) {
+    /**
+     * 按配置生成各条链的骨头并建好模拟。调用时机必须在摆姿势之前
+     * （链的骨头由这里追加，静止变换要在建骨当下快照）。
+     */
+    public ChainRig(Skeleton skeleton, Config config) {
         this.skeleton = skeleton;
-        this.gravity = gravity;
-        for (String[] bones : CHAIN_BONES) {
-            double segLen = skeleton.bone(bones[0]).lengthPx;
-            VerletChain sim = new VerletChain(bones.length + 1, segLen, 35, 2.5);
-            chains.add(new Chain(bones, sim));
+        this.gravity = config.d("chain.gravity", 900);
+        for (int c = 0; c < NAMES.length; c++) {
+            String prefix = NAMES[c];
+            int segments = config.i("chain." + prefix + ".segments", DEFAULT_SEGMENTS[c]);
+            double segLen = config.d("chain." + prefix + ".seg.length", DEFAULT_SEG_LEN[c]);
+            double maxDeg = config.d("chain." + prefix + ".max.deg", 35);
+            double damping = config.d("chain." + prefix + ".damping", 2.5);
+            if (segments < 1 || segLen <= 0) {
+                throw new IllegalArgumentException("链 " + prefix + " 的节数与杆长必须为正");
+            }
+            String[] bones = new String[segments];
+            for (int i = 0; i < segments; i++) {
+                bones[i] = prefix + (i + 1);
+                if (i == 0) {
+                    Point2D.Double start = skeleton.start(ATTACH[c]);
+                    skeleton.addBone(bones[i], ATTACH[c],
+                            ANCHOR_X[c] - start.x, ANCHOR_Y[c] - start.y, 90, segLen);
+                } else {
+                    skeleton.addBone(bones[i], bones[i - 1], 0, segLen, 90, segLen);
+                }
+            }
+            chains.add(new Chain(prefix, bones, new VerletChain(segments + 1, segLen, maxDeg, damping)));
         }
+    }
+
+    /** 链名，顺序与 chainCount() 一致。 */
+    public String chainName(int chainIndex) {
+        return chains.get(chainIndex).name;
     }
 
     /** 推进所有链一帧，并把结果写回骨架。调用前先保证骨架的正运动学是最新的。 */
@@ -95,9 +125,16 @@ public final class ChainRig {
     public double maxJointAngleDeg() {
         double worst = 0;
         for (int c = 0; c < chains.size(); c++) {
-            for (int s = 1; s <= segmentCount(c); s++) {
-                worst = Math.max(worst, Math.abs(jointAngleDeg(c, s)));
-            }
+            worst = Math.max(worst, maxJointAngleDeg(c));
+        }
+        return worst;
+    }
+
+    /** 指定链上所有关节里最大的偏离角。 */
+    public double maxJointAngleDeg(int chainIndex) {
+        double worst = 0;
+        for (int s = 1; s <= segmentCount(chainIndex); s++) {
+            worst = Math.max(worst, Math.abs(jointAngleDeg(chainIndex, s)));
         }
         return worst;
     }
