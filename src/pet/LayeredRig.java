@@ -27,6 +27,7 @@ public final class LayeredRig {
         public final String name;
         public final String group;
         public final List<String> bones;
+        public final String skinning;
         public final Skin skin;
         public final int x;
         public final int y;
@@ -34,10 +35,11 @@ public final class LayeredRig {
         private final BufferedImage image;
 
         private Layer(String name, String group, List<String> bones, BufferedImage image,
-                      Skeleton skeleton, int step, double falloff) {
+                      Skeleton skeleton, int step, double falloff, String skinning) {
             this.name = name;
             this.group = group;
             this.bones = List.copyOf(bones);
+            this.skinning = skinning;
             this.image = new BufferedImage(image.getWidth(), image.getHeight(), BufferedImage.TYPE_INT_ARGB);
             image.getRGB(0, 0, image.getWidth(), image.getHeight(),
                     ((DataBufferInt) this.image.getRaster().getDataBuffer()).getData(), 0, image.getWidth());
@@ -62,7 +64,8 @@ public final class LayeredRig {
                     crop.setRGB(ix, iy, image.getRGB(x + ix, y + iy));
                 }
             }
-            skin = new Skin(crop, skeleton, width / step, height / step, falloff, bones, x, y);
+            skin = new Skin(crop, skeleton, width / step, height / step, falloff, bones, x, y,
+                    skinning.equals("joint-chain"));
         }
 
         public double maxDisplacement() {
@@ -118,15 +121,22 @@ public final class LayeredRig {
         }
         List<Layer> layers = new ArrayList<>();
         Map<String, List<String>> groupBones = new HashMap<>();
+        Map<String, String> groupSkinning = new HashMap<>();
         for (String name : names(properties, "parts")) {
             String key = "layer." + name;
             List<String> bones = names(properties, key + ".bones");
             if (!starts.keySet().containsAll(bones)) throw new IOException("Unknown layer bone: " + name);
             String group = required(properties, key + ".group");
+            String skinning = properties.getProperty(key + ".skinning", "distance");
+            if (!skinning.equals("distance") && !skinning.equals("joint-chain"))
+                throw new IOException("Invalid skinning mode: " + name);
+            String previousSkinning = groupSkinning.putIfAbsent(group, skinning);
+            if (previousSkinning != null && !previousSkinning.equals(skinning))
+                throw new IOException("Inconsistent material skinning: " + group);
             List<String> previous = groupBones.putIfAbsent(group, bones);
             if (previous != null && !previous.equals(bones)) throw new IOException("Inconsistent material group: " + group);
             BufferedImage image = verifiedImage(base, properties, key, width, height);
-            layers.add(new Layer(name, group, bones, image, skeleton, step, falloff));
+            layers.add(new Layer(name, group, bones, image, skeleton, step, falloff, skinning));
         }
         BufferedImage reference = verifiedImage(base, properties, "reference", width, height);
         return new LayeredRig(width, height, skeleton, layers, reference);

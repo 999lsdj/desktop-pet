@@ -58,6 +58,9 @@ class ExportContracts(unittest.TestCase):
         self.assertEqual(p["layer.staff.bones"], "staff")
         self.assertEqual(p["layer.shinNear.bones"], p["layer.thighNear.bones"])
         self.assertEqual(p["layer.footNear.bones"], p["layer.thighNear.bones"])
+        self.assertEqual(p["layer.thighNear.skinning"], "joint-chain")
+        self.assertEqual(p["layer.shinFar.skinning"], "joint-chain")
+        self.assertEqual(p["layer.staff.skinning"], "distance")
         self.assertNotIn("thigh", p["layer.hairNear.bones"])
         seen = set()
         for bone in p["bones"].split(","):

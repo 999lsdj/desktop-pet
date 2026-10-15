@@ -112,6 +112,7 @@ public final class LayeredRigPreview {
             if (layer.bones.size() == 1) rigidLayers++;
             else deformableTriangles += layer.skin.mesh().triangleCount();
             layerReport.append("    ").append(quote(layer.name)).append(": {\"group\":").append(quote(layer.group))
+                    .append(",\"skinning\":").append(quote(layer.skinning))
                     .append(",\"bones\":[").append(String.join(",", layer.bones.stream().map(LayeredRigPreview::quote).toList()))
                     .append("],\"nontransparent_pixels\":").append(layer.visiblePixels)
                     .append(",\"vertices\":").append(layer.skin.mesh().vertexCount())
@@ -124,6 +125,7 @@ public final class LayeredRigPreview {
                 + "  \"runtime_ready\":false,\n  \"physics_acceptance\":false,\n"
                 + "  \"rig_properties_sha256\":" + quote(rigHash) + ",\n"
                 + "  \"driver\":\"periodic analytic joint angles; no inertia, IK or production state machine\",\n"
+                + "  \"leg_motion\":{\"hip_amplitude_deg\":7,\"knee_max_deg\":24,\"ankle_amplitude_deg\":4,\"mirrored_knees\":true},\n"
                 + "  \"rest_composition\":\"straight RGBA source-over; stationary layers bypass Java2D premultiplication\",\n"
                 + "  \"raster_limitations\":\"Java2D nearest-neighbor; rigid drawImage may differ by 1-3 pixels from triangle rasterization in tested poses; inspect seams and occlusion visually\",\n"
                 + "  \"canvas\":[" + rig.width() + "," + rig.height() + "],\n  \"padding_px\":" + padding + ",\n"
@@ -157,9 +159,12 @@ public final class LayeredRigPreview {
         boolean arms = pose.equals("arms") || pose.equals("combined");
         boolean flex = pose.contains("flex") || pose.equals("hair-sleeves-coat") || pose.equals("combined");
         if (legs) {
-            s.setDelta("thighNear", 17 * Math.sin(t)); s.setDelta("thighFar", -17 * Math.sin(t));
-            s.setDelta("shinNear", 17 + 17 * Math.sin(t - 0.5)); s.setDelta("shinFar", 17 - 17 * Math.sin(t - 0.5));
-            s.setDelta("footNear", 9 * Math.sin(t + 0.5)); s.setDelta("footFar", -9 * Math.sin(t + 0.5));
+            s.setDelta("thighNear", 7 * Math.sin(t)); s.setDelta("thighFar", -7 * Math.sin(t));
+            // 只在抬腿半周弯膝，落下时回直；正面投影两侧镜像，避免膝盖都向同一侧折。
+            double nearLift = Math.max(0, Math.sin(t)), farLift = Math.max(0, -Math.sin(t));
+            s.setDelta("shinNear", -24 * nearLift * nearLift);
+            s.setDelta("shinFar", 24 * farLift * farLift);
+            s.setDelta("footNear", 4 * Math.sin(t + 0.5)); s.setDelta("footFar", -4 * Math.sin(t + 0.5));
         }
         if (arms) {
             s.setDelta("upperArm", 15 * Math.sin(t)); s.setDelta("foreArm", -21 * Math.sin(t + 0.4));

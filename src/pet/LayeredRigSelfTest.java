@@ -42,27 +42,100 @@ public final class LayeredRigSelfTest {
         assertRest(staff);
         assertRest(hair);
         System.out.println("PASS: allowed bone sets isolate staff/hair; rest vertices do not drift");
-        Skin a = new Skin(new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB), skeleton,
-                4, 4, 16, List.of("thighNear", "shinNear"), 36, 88);
-        Skin b = new Skin(new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB), skeleton,
-                4, 4, 16, List.of("thighNear", "shinNear"), 40, 96);
-        a.update(); b.update();
-        for (int ay = 2; ay <= 4; ay++) {
-            for (int ax = 1; ax <= 4; ax++) {
-                int ai = ay * 5 + ax, bi = (ay - 2) * 5 + ax - 1;
-                near(a.mesh().dstX(ai) + 36, b.mesh().dstX(bi) + 40, "overlapping material X diverged");
-                near(a.mesh().dstY(ai) + 88, b.mesh().dstY(bi) + 96, "overlapping material Y diverged");
+        for (boolean jointChain : new boolean[]{false, true}) {
+            Skin a = new Skin(new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB), skeleton,
+                    4, 4, 16, List.of("thighNear", "shinNear"), 36, 88, jointChain);
+            Skin b = new Skin(new BufferedImage(16, 16, BufferedImage.TYPE_INT_ARGB), skeleton,
+                    4, 4, 16, List.of("thighNear", "shinNear"), 40, 96, jointChain);
+            a.update(); b.update();
+            for (int ay = 2; ay <= 4; ay++) {
+                for (int ax = 1; ax <= 4; ax++) {
+                    int ai = ay * 5 + ax, bi = (ay - 2) * 5 + ax - 1;
+                    near(a.mesh().dstX(ai) + 36, b.mesh().dstX(bi) + 40, "overlapping material X diverged");
+                    near(a.mesh().dstY(ai) + 88, b.mesh().dstY(bi) + 96, "overlapping material Y diverged");
+                }
             }
         }
         testBundle();
         testMeshClipAndTransparency();
         testNonFiniteAssertions(staff);
+        testKneeVolumeAndAnkleIsolation();
+        testSlantedKnees();
+        if (args.length == 1) testPreviewLegMotion(LayeredRig.load(Path.of(args[0])));
         System.out.println("PASS: shared material field, exact RGBA rest composition, SHA and topology checks");
         System.out.println("PASS: NaN/infinity poses, coordinates and numeric assertions are rejected");
     }
 
     private static Skin restrictedSkin(BufferedImage image, Skeleton s, List<String> bones) {
         return new Skin(image, s, 8, 10, 16, bones, 0, 0);
+    }
+
+    private static void testKneeVolumeAndAnkleIsolation() {
+        Skeleton s = Skeleton.empty();
+        s.addBone("thigh", null, 46, 81, 90, 16);
+        s.addBone("shin", "thigh", 0, 16, 90, 11);
+        s.addBone("foot", "shin", 0, 11, 90, 13);
+        Skin skin = new Skin(new BufferedImage(8, 4, BufferedImage.TYPE_INT_ARGB), s,
+                2, 2, 16, List.of("thigh", "shin", "foot"), 42, 95, true);
+        s.setDelta("foot", 20); s.update(); skin.update();
+        near(skin.mesh().dstX(4), 4, "ankle rotation pulled knee X");
+        near(skin.mesh().dstY(4), 2, "ankle rotation pulled knee Y");
+        s.setDelta("foot", 0);
+        for (int angle = -45; angle <= 45; angle++) {
+            s.setDelta("shin", angle); s.update(); skin.update();
+            near(Math.hypot(skin.mesh().dstX(5) - skin.mesh().dstX(3),
+                    skin.mesh().dstY(5) - skin.mesh().dstY(3)), 8, "knee cross-section collapsed");
+            near(skin.mesh().dstX(4), 4, "knee pivot drift X");
+            near(skin.mesh().dstY(4), 2, "knee pivot drift Y");
+        }
+        System.out.println("PASS: ankle cannot pull knee; knee width preserved through +/-45 degrees");
+    }
+
+    private static void testPreviewLegMotion(LayeredRig rig) {
+        for (LayeredRig.Layer layer : rig.layers()) {
+            if (layer.group.startsWith("leg") && !layer.skinning.equals("joint-chain"))
+                throw new AssertionError("leg bundle did not enable joint-local skinning");
+        }
+        double maxHip = 0, maxKnee = 0;
+        for (int i = 0; i <= 720; i++) {
+            double phase = i * Math.PI * 2 / 720;
+            LayeredRigPreview.apply(rig, "knees-ankles", phase);
+            for (String side : List.of("Near", "Far")) {
+                double hip = rig.skeleton().bone("thigh" + side).deltaDeg();
+                double knee = rig.skeleton().bone("shin" + side).deltaDeg();
+                maxHip = Math.max(maxHip, Math.abs(hip)); maxKnee = Math.max(maxKnee, Math.abs(knee));
+                if (!Double.isFinite(hip) || Math.abs(hip) > 7.000001 || !Double.isFinite(knee)
+                        || Math.abs(knee) > 24.000001 || (side.equals("Near") ? knee > 0 : knee < 0))
+                    throw new AssertionError("leg exceeds requested range or bends inward: " + side);
+                if (hip <= 0) near(knee, 0, "planted leg stays bent");
+            }
+        }
+        near(maxHip, 7, "hip amplitude"); near(maxKnee, 24, "knee range");
+        rig.resetPose();
+        System.out.println("PASS: 721 leg phases stay within +/-7 hip and 24 knee, with mirrored bend");
+    }
+
+    private static void testSlantedKnees() {
+        for (double[] leg : new double[][]{{44, 46, 46}, {56, 59, 62}}) {
+            Skeleton s = Skeleton.empty();
+            double thighAngle = Math.toDegrees(Math.atan2(16, leg[1] - leg[0]));
+            double shinAngle = Math.toDegrees(Math.atan2(11, leg[2] - leg[1]));
+            s.addBone("thigh", null, leg[0], 81, thighAngle, Math.hypot(leg[1] - leg[0], 16));
+            s.addBone("shin", "thigh", leg[1] - leg[0], 16, shinAngle, Math.hypot(leg[2] - leg[1], 11));
+            s.addBone("foot", "shin", leg[2] - leg[1], 11, 90, 13);
+            Skin skin = new Skin(new BufferedImage(8, 4, BufferedImage.TYPE_INT_ARGB), s,
+                    2, 2, 16, List.of("thigh", "shin", "foot"), leg[1] - 4, 95, true);
+            for (int angle = -24; angle <= 24; angle++) {
+                s.setDelta("shin", angle); s.setDelta("foot", 20); s.update(); skin.update();
+                near(skin.mesh().dstX(4), 4, "slanted knee pivot X");
+                near(skin.mesh().dstY(4), 2, "slanted knee pivot Y");
+                double width = Math.hypot(skin.mesh().dstX(5) - skin.mesh().dstX(3),
+                        skin.mesh().dstY(5) - skin.mesh().dstY(3));
+                if (!Double.isFinite(width) || width < 7.92 || width > 8.08)
+                    throw new AssertionError("slanted knee loses more than 1% cross-section: " + width);
+            }
+        }
+        System.out.println("PASS: actual slanted leg joints retain pivot and knee width within 1%");
     }
 
     private static void assertRest(Skin skin) {

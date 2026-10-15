@@ -132,6 +132,7 @@ def export_rig(layout_path, candidate, output, root=ROOT):
         target = f"layers/{name}.png"
         lines.extend([f"layer.{name}.file={target}", f"layer.{name}.sha256={layer['sha256']}",
                       f"layer.{name}.group={group}", f"layer.{name}.bones=" + ",".join(groups[group])])
+        lines.append(f"layer.{name}.skinning=" + ("joint-chain" if group in ("legNear", "legFar") else "distance"))
         sources.append((source, target))
     # All integrity checks finish before creating or modifying the output bundle.
     (output / "layers").mkdir(parents=True, exist_ok=True)

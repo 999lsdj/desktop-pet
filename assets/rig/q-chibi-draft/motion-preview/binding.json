@@ -3,12 +3,13 @@
   "candidate_manifest_sha256": "220a70e76693d88d11d8a0f389484d945b37cd38e7df67a899bfc37a7f2ff350",
   "inpaint_report_sha256": "09f714597c242ea7e554762fb7924dfdf432066c23845684ccbacd0c459ec028",
   "files_sha256": {
-    "poses.png": "d4b7b6e0ad4f249b8816872667fba0bbd4b67acc1d5bfadefb786cbf447d4d25",
-    "preview.gif": "9734b12055bceb3f1a193c5e2a3a541554e54b16bb084235bc815142eb205e02",
+    "knee-comparison.png": "7bffbab591a388070554f0b515f6e72a030be7a87a021335727b5d62dca67ab3",
+    "poses.png": "d77e177a7a83d1105411ea49e15b79dc342e55749438bb35b0796635cc1d4187",
+    "preview.gif": "06375098d5906c1a9c55b821608888a7ef35b0e5ebf56d53ad3e3b2d619ba5bb",
     "repeat-report.json": "d3e90bad0d35527c3cb5cc78c723700f5ce6e28a29486a44100381f3bd0876b9",
-    "report.json": "1b5647228289446be7ed2b8e2cb6549bed3c56b20402b8585db16b5f30d9561b",
+    "report.json": "dc3e890faed6f1b2d83c1c30a68687bb1e043b7dc09f22a95a1b007a1f20e409",
     "rest.png": "f45fd370ce990bbdf26bd0bf7cfa3b9a7f7f0fd21005dc50d755279f750dc4ab",
-    "rig.properties": "99cbef3843ab2c8ec6502c0658b96a65fa7f03a6b80bf23d6bb13684ebbddd01"
+    "rig.properties": "faa7a30f05703c06a3a4af8603f0fecb6a942be4fd5095a91f24553590abfd15"
   },
   "driver": "synthetic periodic joint angles",
   "runtime_ready": false,
@@ -21,5 +22,17 @@
       "张开手掌尚未制作",
       "未接入正式待机、踱步或Verlet链"
     ]
+  },
+  "preview_evidence_dir": "_tmp/knee-fix/after",
+  "knee_fix": {
+    "hip_amplitude_before_deg": 17,
+    "hip_amplitude_after_deg": 7,
+    "knee_peak_before_deg": 34,
+    "knee_peak_after_deg": 24,
+    "ankle_knee_drift_before_px": 0.177852,
+    "knee_width_before_px": 7.651734,
+    "knee_width_reference_px": 8,
+    "regression": "ankle-knee isolation; vertical fixture 8px section through -45..45 degrees; actual slanted knees within 1% width through -24..24 degrees",
+    "pose_samples": 721
   }
 }

@@ -662,6 +662,13 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
          "将自然摆动与既有动作迁到分层蒙皮，再验证极限动作、窗口裁切、命中和实机观感。"
          "OpenSpec 2.3、3.2、4.1、4.2、7.1 至 7.3 均保持未完成；候选 runtime_ready 为 false。")
 
+    body(doc,
+         "同日按用户反馈修正膝盖内凹与腿部摆幅。髋摆幅从 ±17 度减为 ±7 度，"
+         "膝盖最高弯曲从 34 度减为 24 度；只在抬腿半周弯曲，落下回直，两侧方向镜像。"
+         "旧权重会让脚踝牵动膝盖，矩阵混合也会缩窄弯曲处。腿部现改为相邻关节局部权重，"
+         "围绕共同枢轴插值旋转角。独立踝膝隔离、膝盖 ±45 度截面和 721 个动作相位回归通过。"
+         "本节图 4 与耗时已更新为修复后的结果，正式自然动作仍未验收。")
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
     return out_path

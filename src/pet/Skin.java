@@ -31,6 +31,8 @@ public final class Skin {
     private final double originY;
     private final int[][] vertexBones;
     private final double[][] vertexWeights;
+    private final boolean jointChain;
+    private final Point2D.Double[] jointPivots;
     private double lastUpdateMs;
 
     public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx) {
@@ -40,6 +42,11 @@ public final class Skin {
     /** Bind a cropped layer only to its material's bones, in shared native coordinates. */
     public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx,
                 List<String> allowedBones, double originX, double originY) {
+        this(image, skeleton, cols, rows, falloffPx, allowedBones, originX, originY, false);
+    }
+
+    public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx,
+                List<String> allowedBones, double originX, double originY, boolean jointChain) {
         if (allowedBones.isEmpty() || allowedBones.stream().distinct().count() != allowedBones.size()) {
             throw new IllegalArgumentException("Allowed bones must be nonempty and unique");
         }
@@ -47,6 +54,7 @@ public final class Skin {
             throw new IllegalArgumentException("Invalid skin grid or falloff");
         }
         this.skeleton = skeleton;
+        this.jointChain = jointChain;
         this.image = image;
         this.originX = originX;
         this.originY = originY;
@@ -71,7 +79,50 @@ public final class Skin {
         }
         vertexBones = new int[n][];
         vertexWeights = new double[n][];
-        assignWeights(falloffPx);
+        jointPivots = new Point2D.Double[n];
+        if (jointChain) assignJointWeights();
+        else assignWeights(falloffPx);
+    }
+
+    /** 腿部只在相邻关节附近混合，防止短小腿把脚踝的影响传回膝盖。 */
+    private void assignJointWeights() {
+        for (int b = 1; b < boneNames.length; b++) {
+            if (!boneNames[b - 1].equals(skeleton.bone(boneNames[b]).parent)
+                    || restTip(b - 1).distance(restStart(b)) > 1e-8)
+                throw new IllegalArgumentException("Joint skin requires a connected, ordered bone chain");
+        }
+        for (String name : boneNames) {
+            if (!(skeleton.bone(name).lengthPx > 0))
+                throw new IllegalArgumentException("Joint skin requires positive bone lengths");
+        }
+        for (int i = 0; i < srcX.length; i++) {
+            int closest = 0;
+            double best = Double.POSITIVE_INFINITY;
+            for (int b = 0; b < boneNames.length; b++) {
+                Point2D.Double a = restStart(b), z = restTip(b);
+                double distance = distanceToSegment(srcX[i], srcY[i], a.x, a.y, z.x, z.y);
+                if (distance < best) { best = distance; closest = b; }
+            }
+            vertexBones[i] = new int[]{closest};
+            vertexWeights[i] = new double[]{1};
+            for (int b = Math.max(1, closest); b <= Math.min(boneNames.length - 1, closest + 1); b++) {
+                Point2D.Double a = restStart(b - 1), pivot = restStart(b), z = restTip(b);
+                double before = a.distance(pivot), after = pivot.distance(z);
+                double tx = (pivot.x - a.x) / before + (z.x - pivot.x) / after;
+                double ty = (pivot.y - a.y) / before + (z.y - pivot.y) / after;
+                double length = Math.hypot(tx, ty);
+                if (length < 1e-8) throw new IllegalArgumentException("Joint skin cannot bind a folded rest chain");
+                double along = ((srcX[i] - pivot.x) * tx + (srcY[i] - pivot.y) * ty) / length;
+                double radius = Math.min(4, Math.min(before, after) * 0.45);
+                if (Math.abs(along) >= radius) continue;
+                double blend = (along + radius) / (2 * radius);
+                blend = blend * blend * (3 - 2 * blend);
+                vertexBones[i] = new int[]{b - 1, b};
+                vertexWeights[i] = new double[]{1 - blend, blend};
+                jointPivots[i] = pivot;
+                break;
+            }
+        }
     }
 
     private void assignWeights(double falloffPx) {
@@ -169,6 +220,20 @@ public final class Skin {
             double sy = 0;
             int[] bones = vertexBones[i];
             double[] weights = vertexWeights[i];
+            if (jointChain && bones.length == 2) {
+                // 围绕共同枢轴插值旋转角，不把两个旋转矩阵相加而压瘪膝盖。
+                AffineTransform a = transfer[bones[0]], b = transfer[bones[1]];
+                double angle = Math.atan2(a.getShearY(), a.getScaleX());
+                double delta = Math.atan2(b.getShearY(), b.getScaleX()) - angle;
+                angle += weights[1] * Math.atan2(Math.sin(delta), Math.cos(delta));
+                Point2D.Double pivot = jointPivots[i];
+                double px = a.getScaleX() * pivot.x + a.getShearX() * pivot.y + a.getTranslateX();
+                double py = a.getShearY() * pivot.x + a.getScaleY() * pivot.y + a.getTranslateY();
+                double cos = Math.cos(angle), sin = Math.sin(angle);
+                mesh.setVertex(i, px + cos * (x - pivot.x) - sin * (y - pivot.y) - originX,
+                        py + sin * (x - pivot.x) + cos * (y - pivot.y) - originY);
+                continue;
+            }
             for (int k = 0; k < bones.length; k++) {
                 AffineTransform t = transfer[bones[k]];
                 double w = weights[k];
