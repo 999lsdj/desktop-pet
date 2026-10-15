@@ -1,6 +1,7 @@
 package pet;
 
 import java.awt.geom.AffineTransform;
+import java.awt.Graphics2D;
 import java.awt.geom.Point2D;
 import java.awt.image.BufferedImage;
 import java.util.ArrayList;
@@ -19,28 +20,45 @@ public final class Skin {
     private static final double WEIGHT_EPS = 0.02;
 
     private final Skeleton skeleton;
+    private final BufferedImage image;
     private final MeshWarp mesh;
     private final String[] boneNames;
     private final AffineTransform[] transfer;
     private final AffineTransform[] restInverse;
     private final double[] srcX;
     private final double[] srcY;
+    private final double originX;
+    private final double originY;
     private final int[][] vertexBones;
     private final double[][] vertexWeights;
     private double lastUpdateMs;
 
     public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx) {
+        this(image, skeleton, cols, rows, falloffPx, skeleton.names(), 0, 0);
+    }
+
+    /** Bind a cropped layer only to its material's bones, in shared native coordinates. */
+    public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx,
+                List<String> allowedBones, double originX, double originY) {
+        if (allowedBones.isEmpty() || allowedBones.stream().distinct().count() != allowedBones.size()) {
+            throw new IllegalArgumentException("Allowed bones must be nonempty and unique");
+        }
+        if (!(falloffPx > 0) || !Double.isFinite(falloffPx) || cols < 1 || rows < 1) {
+            throw new IllegalArgumentException("Invalid skin grid or falloff");
+        }
         this.skeleton = skeleton;
+        this.image = image;
+        this.originX = originX;
+        this.originY = originY;
         this.mesh = new MeshWarp(image, cols, rows);
         int n = mesh.vertexCount();
         srcX = new double[n];
         srcY = new double[n];
         for (int i = 0; i < n; i++) {
-            srcX[i] = mesh.srcX(i);
-            srcY[i] = mesh.srcY(i);
+            srcX[i] = mesh.srcX(i) + originX;
+            srcY[i] = mesh.srcY(i) + originY;
         }
-        List<String> names = skeleton.names();
-        boneNames = names.toArray(new String[0]);
+        boneNames = allowedBones.toArray(new String[0]);
         transfer = new AffineTransform[boneNames.length];
         restInverse = new AffineTransform[boneNames.length];
         for (int b = 0; b < boneNames.length; b++) {
@@ -157,13 +175,25 @@ public final class Skin {
                 sx += w * (t.getScaleX() * x + t.getShearX() * y + t.getTranslateX());
                 sy += w * (t.getShearY() * x + t.getScaleY() * y + t.getTranslateY());
             }
-            mesh.setVertex(i, sx, sy);
+            mesh.setVertex(i, sx - originX, sy - originY);
         }
         lastUpdateMs = (System.nanoTime() - t0) / 1e6;
     }
 
     public MeshWarp mesh() {
         return mesh;
+    }
+
+    /** Single-bone materials are exactly rigid; one image transform avoids needless triangle clips. */
+    public void draw(Graphics2D g, double offsetX, double offsetY) {
+        if (boneNames.length == 1) {
+            AffineTransform placement = AffineTransform.getTranslateInstance(offsetX - originX, offsetY - originY);
+            placement.concatenate(transfer[0]);
+            placement.translate(originX, originY);
+            g.drawImage(image, placement, null);
+        } else {
+            mesh.draw(g, offsetX, offsetY);
+        }
     }
 
     public double lastUpdateMs() {

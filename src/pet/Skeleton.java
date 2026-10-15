@@ -63,6 +63,11 @@ public final class Skeleton {
     private Skeleton() {
     }
 
+    /** Empty skeleton for a separately validated, data-driven rig. */
+    public static Skeleton empty() {
+        return new Skeleton();
+    }
+
     /**
      * 按现有拆件坐标搭出角色的骨架。
      *

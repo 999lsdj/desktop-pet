@@ -3,9 +3,11 @@ package pet;
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.RenderingHints;
+import java.awt.Shape;
 import java.awt.geom.AffineTransform;
 import java.awt.geom.Path2D;
 import java.awt.image.BufferedImage;
+import java.util.Arrays;
 
 /**
  * 三角网格变形：把整张图切成 cols×rows 个格，每格拆成两个三角形，
@@ -49,8 +51,7 @@ public final class MeshWarp {
         }
         reset();
 
-        tris = new int[cols * rows * 6];
-        triPath = new Path2D.Double[cols * rows * 2];
+        int[] active = new int[cols * rows * 6];
         int t = 0;
         for (int y = 0; y < rows; y++) {
             for (int x = 0; x < cols; x++) {
@@ -58,13 +59,36 @@ public final class MeshWarp {
                 int v10 = v00 + 1;
                 int v01 = v00 + vcols;
                 int v11 = v01 + 1;
-                tris[t++] = v00; tris[t++] = v10; tris[t++] = v11;
-                tris[t++] = v00; tris[t++] = v11; tris[t++] = v01;
+                if (hasCoverage(srcX[v00], srcY[v00], srcX[v11], srcY[v11], true)) {
+                    active[t++] = v00; active[t++] = v10; active[t++] = v11;
+                }
+                if (hasCoverage(srcX[v00], srcY[v00], srcX[v11], srcY[v11], false)) {
+                    active[t++] = v00; active[t++] = v11; active[t++] = v01;
+                }
             }
         }
+        tris = Arrays.copyOf(active, t);
+        triPath = new Path2D.Double[t / 3];
         for (int i = 0; i < triPath.length; i++) {
             triPath[i] = new Path2D.Double();
         }
+    }
+
+    /**
+     * Conservative pixel-square/triangle overlap, with a one-pixel sampling halo.
+     * Java2D quantizes the destination clip separately from nearest-neighbor sampling;
+     * a triangle can therefore sample just outside its ideal source edges.
+     */
+    private boolean hasCoverage(double x0, double y0, double x1, double y1, boolean upper) {
+        double width = x1 - x0, height = y1 - y0;
+        for (int y = Math.max(0, (int) Math.floor(y0) - 1); y < Math.ceil(y1) + 1 && y < image.getHeight(); y++) {
+            for (int x = Math.max(0, (int) Math.floor(x0) - 1); x < Math.ceil(x1) + 1 && x < image.getWidth(); x++) {
+                if ((image.getRGB(x, y) >>> 24) == 0) continue;
+                if (upper ? (x + 2 - x0) * height >= (y - 1 - y0) * width
+                        : (y + 2 - y0) * width >= (x - 1 - x0) * height) return true;
+            }
+        }
+        return false;
     }
 
     /** 目标顶点回到与源顶点重合，即不变形。 */
@@ -127,10 +151,10 @@ public final class MeshWarp {
 
     /** 把变形后的图按 (offsetX, offsetY) 平移到 g 上。 */
     public void draw(Graphics2D g, double offsetX, double offsetY) {
-        Object aa = g.getRenderingHint(RenderingHints.KEY_ANTIALIASING);
-        AffineTransform saved = g.getTransform();
+        g = (Graphics2D) g.create();
         g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_OFF);
         g.translate(offsetX, offsetY);
+        Shape callerClip = g.getClip();
         for (int t = 0; t < triPath.length; t++) {
             int a = tris[t * 3];
             int b = tris[t * 3 + 1];
@@ -143,13 +167,12 @@ public final class MeshWarp {
                 p.lineTo(dstX[b], dstY[b]);
                 p.lineTo(dstX[c], dstY[c]);
                 p.closePath();
-                g.setClip(p);
+                if (callerClip == null) g.setClip(p);
+                else { g.setClip(callerClip); g.clip(p); }
                 g.drawImage(image, at, null);
             }
         }
-        g.setClip(null);
-        g.setTransform(saved);
-        g.setRenderingHint(RenderingHints.KEY_ANTIALIASING, aa);
+        g.dispose();
     }
 
     /** 画出网格线，用来核对网格是怎么弯的。 */
