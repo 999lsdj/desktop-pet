@@ -46,9 +46,11 @@ def _run(root, selected):
     layers = {p["name"]:Image.open(root / p["layer"]).convert("RGBA") for p in manifest["layers"]}
     dest = root / "filled-layers"
     dest.mkdir(exist_ok=True)
+    layer_hashes = {}
     # 每次执行从可见层开始，选择少量任务时不能混入上次未指定的结果。
     for name, layer in layers.items():
         layer.save(dest / f"{name}.png")
+        layer_hashes[name] = hashlib.sha256((dest / f"{name}.png").read_bytes()).hexdigest()
     try:
         for job in jobs:
             name = job["part"]
@@ -67,6 +69,7 @@ def _run(root, selected):
             mask = Image.open(root/"masks"/f"{name}-missing.png").convert("L")
             layers[name] = pipeline.fill_hidden(layers[name], generated, mask)
             layers[name].save(dest/f"{name}.png")
+            layer_hashes[name] = hashlib.sha256((dest/f"{name}.png").read_bytes()).hexdigest()
             checks = json.loads((out/"report.json").read_text(encoding="utf-8"))
             report["completed"].append({"part":name,"full_size":checks["full_size"],
                                         "visual_review":"pending"})
@@ -84,6 +87,12 @@ def _run(root, selected):
         report["joint_samples"] = len(records)
         report["joint_samples_with_gaps"] = sum(r["gap_pixels"]>0 for r in records)
         report["max_joint_gap_pixels"] = max(r["gap_pixels"] for r in records)
+        # 数量检查揭示被遮挡的整段衣发，而不是只盯住关节附近的小圆圈。
+        report["flexible_outlines"] = {
+            name:{"component_pixels":pipeline.component_sizes(layer.getchannel("A")),
+                  "major_components":sum(n >= 4 for n in pipeline.component_sizes(layer.getchannel("A")))}
+            for name,layer in layers.items() if name.startswith(("hair","coat","sleeve"))}
+        report["filled_layers_sha256"] = layer_hashes
         report["status"] = "generated_pending_review"
         report["remaining_jobs"] = sorted(names-{j["part"] for j in report["completed"]})
         report.pop("current",None)
@@ -103,11 +112,23 @@ def export_candidates(root, destination):
         raise ValueError("只允许导出当前全部补洞任务执行完毕的候选包")
     if report.get("manifest_sha256") != hashlib.sha256((root/"manifest.json").read_bytes()).hexdigest():
         raise ValueError("补洞报告与当前分层定义不一致，请重新生成")
+    if report.get("rest_changed_rgba_pixels") != 0:
+        raise ValueError("原姿态重组必须经过零 RGBA 差异验证，请重新生成")
     manifest = json.loads((root/"manifest.json").read_text(encoding="utf-8"))
-    (destination/"layers").mkdir(parents=True,exist_ok=True)
+    fingerprints = report.get("filled_layers_sha256")
+    if not isinstance(fingerprints, dict) or set(fingerprints) != {p["name"] for p in manifest["layers"]}:
+        raise ValueError("补洞报告缺少完整图层指纹，请重新生成")
+    verified_layers = {}
     for part in manifest["layers"]:
         name = part["name"]
-        shutil.copy2(root/"filled-layers"/f"{name}.png",destination/"layers"/f"{name}.png")
+        data = (root/"filled-layers"/f"{name}.png").read_bytes()
+        if hashlib.sha256(data).hexdigest() != fingerprints[name]:
+            raise ValueError(f"补洞图层 SHA-256 与生成报告不一致：{name}，请重新生成")
+        verified_layers[name] = data
+    # 验证全部通过后才写目标；写入刚才验证的字节，避免检查后再次读取变化的源图。
+    (destination/"layers").mkdir(parents=True,exist_ok=True)
+    for name, data in verified_layers.items():
+        (destination/"layers"/f"{name}.png").write_bytes(data)
     for name in ("report.json","inpaint-report.json","filled-comparison.png","filled-layers.png"):
         shutil.copy2(root/name,destination/name)
     shutil.copy2(root/"filled-poses"/"checks.json",destination/"pose-checks.json")

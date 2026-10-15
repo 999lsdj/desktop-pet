@@ -1,0 +1,33 @@
+{
+  "status": "current_layout_candidate_repeat_checks_passed",
+  "runtime_ready": false,
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+  "commands": [
+    "python -X utf8 tools/build-q-parts.py --out _tmp/q-parts-motion",
+    "python -X utf8 tools/inpaint-q-parts.py --root _tmp/q-parts-motion --export assets/rig/q-chibi-draft"
+  ],
+  "runs": 2,
+  "current_jobs": 16,
+  "file_structure_equal": true,
+  "files_each_run": 431,
+  "stable_inputs_and_outputs_compared": 163,
+  "changed_stable_files": [],
+  "completed_each_run": [
+    16,
+    16
+  ],
+  "outside_changed_pixels_each_run": [
+    0,
+    0
+  ],
+  "rest_changed_rgba_pixels_each_run": [
+    0,
+    0
+  ],
+  "joint_samples_with_gaps_each_run": [
+    0,
+    0
+  ],
+  "evidence_dir": "_tmp/q-motion/final-repeat",
+  "notes": "仅验证当前候选范围；未覆盖张开手掌、全部隐藏材质与正式动作，不完成任务7.3。第二轮报告新增全部图层SHA，执行ID及耗时不要求相同。"
+}

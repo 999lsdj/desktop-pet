@@ -11,6 +11,42 @@
       "visual_review": "pending"
     },
     {
+      "part": "hairNear",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 7000,
+        "mask_pixels": 7000
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "hairFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 13070,
+        "mask_pixels": 13075
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "coatNear",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 5425,
+        "mask_pixels": 5425
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "coatFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 1550,
+        "mask_pixels": 1550
+      },
+      "visual_review": "pending"
+    },
+    {
       "part": "thighNear",
       "full_size": {
         "outside_changed_pixels": 0,
@@ -50,8 +86,8 @@
       "part": "foreArm",
       "full_size": {
         "outside_changed_pixels": 0,
-        "inside_changed_pixels": 2775,
-        "mask_pixels": 2775
+        "inside_changed_pixels": 2750,
+        "mask_pixels": 2750
       },
       "visual_review": "pending"
     },
@@ -61,6 +97,15 @@
         "outside_changed_pixels": 0,
         "inside_changed_pixels": 1550,
         "mask_pixels": 1550
+      },
+      "visual_review": "pending"
+    },
+    {
+      "part": "sleeveNear",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 1400,
+        "mask_pixels": 1400
       },
       "visual_review": "pending"
     },
@@ -83,21 +128,93 @@
       "visual_review": "pending"
     },
     {
+      "part": "sleeveFar",
+      "full_size": {
+        "outside_changed_pixels": 0,
+        "inside_changed_pixels": 550,
+        "mask_pixels": 550
+      },
+      "visual_review": "pending"
+    },
+    {
       "part": "staff",
       "full_size": {
         "outside_changed_pixels": 0,
-        "inside_changed_pixels": 924,
-        "mask_pixels": 925
+        "inside_changed_pixels": 1025,
+        "mask_pixels": 1025
       },
       "visual_review": "pending"
     }
   ],
   "runtime_ready": false,
   "visual_review": "pending",
-  "manifest_sha256": "ab58da7aef9f09f60237ab82c0c073ac9246274a017c3f5c2d31a455f39eb1e1",
+  "manifest_sha256": "2f8a8539db28ebd2ba57d31fee21efce1d08044cbbc230c639d33658bb6f0cf8",
   "rest_changed_rgba_pixels": 0,
   "joint_samples": 163,
   "joint_samples_with_gaps": 0,
   "max_joint_gap_pixels": 0,
+  "flexible_outlines": {
+    "hairNear": {
+      "component_pixels": [
+        400,
+        3
+      ],
+      "major_components": 1
+    },
+    "hairFar": {
+      "component_pixels": [
+        1650
+      ],
+      "major_components": 1
+    },
+    "coatNear": {
+      "component_pixels": [
+        759
+      ],
+      "major_components": 1
+    },
+    "coatFar": {
+      "component_pixels": [
+        780
+      ],
+      "major_components": 1
+    },
+    "sleeveNear": {
+      "component_pixels": [
+        258
+      ],
+      "major_components": 1
+    },
+    "sleeveFar": {
+      "component_pixels": [
+        253
+      ],
+      "major_components": 1
+    }
+  },
+  "filled_layers_sha256": {
+    "torso": "f3bf8b967d82d6d951125daf00414d1dd32e527d5298761007bc874ed424a58d",
+    "hairNear": "754416fa7093cea223c2487d89ec0882710c873cadbf382463c619082e5cfeba",
+    "hairFar": "0d482537f3371526933bd6f2ac5f5c49650025a188e4ae1c79327f4df11eedc8",
+    "coatNear": "42d85bc3521ce9e9ae7399358482ecf8eee7f2a76d47110d6ce1eba15705ad59",
+    "coatFar": "bd702f58d011475a3fdcd64535f6f38d7b698d1575e89753c874ce8eb332e976",
+    "thighNear": "29ece8d0bccfd849976029b35c82614c6ffcd23d5c653cfe8279c498865f1439",
+    "thighFar": "077688070cd0e7cd7239ccd2f7277c58825bed78cf4415ee1bccfef005e9a9a9",
+    "shinNear": "37ab99d2d11d1a6e1aa0a597e1273d7a8f53ec20d00e475da348112649619139",
+    "shinFar": "7b24e992e8380a96df8db14a43db10d7ed34eaf3c8b756974d41a54e022dde01",
+    "footNear": "8281b7831c9c026046e8bef060707ebb6b532d2ce2e8f8aa00d7e7a737b5ff6c",
+    "footFar": "ce385119f052d5a0d52e586f3a410fe81c026283e3aa4e9b7519d7ce58818467",
+    "foreArm": "18aa9c4feb1ac6f257f81de857fe60d36b8c812bfd71f843a7718aa1c3731c04",
+    "upperArm": "d4e60a89bb002cc137b623927267bfbb9ab7ede0abf7746718e9547f3f237024",
+    "sleeveNear": "37e30be18f89a9bbcefe0ad90fbf081a558d755bbd09d3ef67d94f8784c0062d",
+    "foreArmFar": "a88c05e284c390080739d2af532aa46a6abfb0aa46e33c680ddfed7a7400116d",
+    "upperArmFar": "f857d863844a3392fccbec4bb2e6cf9262cc1e4d65a107ecf81de5fe18d1ef65",
+    "sleeveFar": "fe8e59b888c1a74fafa143f3e494661a15fbccd818f608682b4f419f60397084",
+    "handFar": "57659bbefa00fbea1eb1e22e1be74af710a29eb0cc4697eab8f9d22ee109c88c",
+    "head": "b52d9f6cd013f71394df6ab71fbbed814f7b9d90f82804314dd18a32d3369ab0",
+    "staff": "fcf0cbbe5cb87ce97ff38a8428c92e110703ba5acc74a2db5437330560f1a63c",
+    "lantern": "60deea57d894d938db2a3c348f6ec9f87f38abeecf02424e0d60585ea515977d",
+    "hand": "b5b031ebe3f1f35d2484581bf1bb8d2bb43bc98dd98a28b9c5c8f8bd14f201f5"
+  },
   "remaining_jobs": []
 }

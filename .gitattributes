@@ -1,0 +1,4 @@
+# Candidate manifests hash the exact layout bytes; preserve them across checkouts.
+assets/rig/*.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
+assets/rig/**/*.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
+assets/rig/**/*.properties -text whitespace=trailing-space,space-before-tab,cr-at-eol

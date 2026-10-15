@@ -1,0 +1,25 @@
+{
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+  "candidate_manifest_sha256": "220a70e76693d88d11d8a0f389484d945b37cd38e7df67a899bfc37a7f2ff350",
+  "inpaint_report_sha256": "09f714597c242ea7e554762fb7924dfdf432066c23845684ccbacd0c459ec028",
+  "files_sha256": {
+    "poses.png": "d4b7b6e0ad4f249b8816872667fba0bbd4b67acc1d5bfadefb786cbf447d4d25",
+    "preview.gif": "9734b12055bceb3f1a193c5e2a3a541554e54b16bb084235bc815142eb205e02",
+    "repeat-report.json": "d3e90bad0d35527c3cb5cc78c723700f5ce6e28a29486a44100381f3bd0876b9",
+    "report.json": "1b5647228289446be7ed2b8e2cb6549bed3c56b20402b8585db16b5f30d9561b",
+    "rest.png": "f45fd370ce990bbdf26bd0bf7cfa3b9a7f7f0fd21005dc50d755279f750dc4ab",
+    "rig.properties": "99cbef3843ab2c8ec6502c0658b96a65fa7f03a6b80bf23d6bb13684ebbddd01"
+  },
+  "driver": "synthetic periodic joint angles",
+  "runtime_ready": false,
+  "physics_acceptance": false,
+  "visual_review": {
+    "status": "needs_refinement",
+    "issues": [
+      "髋部抬腿时出现黑色拉伸与遮挡不自然",
+      "隐藏发丝颜色与轮廓仍须精修",
+      "张开手掌尚未制作",
+      "未接入正式待机、踱步或Verlet链"
+    ]
+  }
+}

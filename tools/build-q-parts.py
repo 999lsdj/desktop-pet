@@ -64,6 +64,26 @@ def reassemble(layers, size):
     return result
 
 
+def component_sizes(alpha):
+    """八邻域检查材质断段；极弱的透明边缘不充当连接桥。"""
+    points = {(i % alpha.width, i // alpha.width)
+              for i, value in enumerate(alpha.get_flattened_data()) if value > 8}
+    sizes = []
+    while points:
+        todo = [points.pop()]
+        size = 0
+        while todo:
+            x, y = todo.pop()
+            size += 1
+            for dx, dy in ((-1,-1),(-1,0),(-1,1),(0,-1),(0,1),(1,-1),(1,0),(1,1)):
+                point = (x+dx, y+dy)
+                if point in points:
+                    points.remove(point)
+                    todo.append(point)
+        sizes.append(size)
+    return sorted(sizes, reverse=True)
+
+
 def fill_hidden(layer, generated, mask):
     if layer.size != generated.size or layer.size != mask.size:
         raise ValueError("补层尺寸不一致")
@@ -84,6 +104,40 @@ def source_mask(mask, size, layout):
     result = Image.new("L", size)
     result.paste(mask.resize((right-left, bottom-top), Image.Resampling.NEAREST), (left, top))
     return result
+
+
+def material_context(source, visible, target, layout):
+    """只用本层可见颜色提示补图，防止邻近的手和灯穗成为长发的生成参照。
+
+    近邻颜色只作为模型上下文，绝不直接写入最终层。最终仍只合入缺失蒙版。
+    """
+    native = source.crop(layout['crop']).resize(visible.size, Image.Resampling.BOX)
+    colors = list(native.get_flattened_data())
+    seeds = [i for i,v in enumerate(visible.get_flattened_data()) if v > 8]
+    if not seeds:
+        raise ValueError('独立材质上下文至少需要一个可见像素')
+    seen = set(seeds)
+    queue = deque(seeds)
+    width, height = visible.size
+    while queue:
+        i = queue.popleft()
+        x, y = i % width, i // width
+        for nx, ny in ((x-1,y),(x+1,y),(x,y-1),(x,y+1)):
+            j = ny*width+nx
+            if 0 <= nx < width and 0 <= ny < height and j not in seen:
+                colors[j] = colors[i]
+                seen.add(j)
+                queue.append(j)
+    guide = Image.new('RGBA', visible.size)
+    guide.putdata([(r,g,b,255) for r,g,b,_ in colors])
+    left,top,right,bottom = layout['crop']
+    full_guide = Image.new('RGBA',source.size)
+    full_guide.paste(guide.resize((right-left,bottom-top),Image.Resampling.NEAREST),(left,top))
+    context = Image.new('RGBA',source.size,(128,128,128,255))
+    halo = source_mask(target.filter(ImageFilter.MaxFilter(9)),source.size,layout)
+    context.paste(full_guide,mask=halo)
+    context.paste(source,mask=source_mask(visible,source.size,layout))
+    return context
 
 
 def joint_gap(before, after, pivot, radius):
@@ -205,12 +259,18 @@ def _build(layout_path, out):
         entry = {"name":name, "bone":part["bone"], "bounds":layers[name].getbbox(),
                  "visible_pixels":sum(a > 0 for a in layers[name].getchannel("A").get_flattened_data()),
                  "missing_pixels":missing_count, "layer":f"layers/{name}.png",
+                 "visible_components":component_sizes(layers[name].getchannel("A")),
+                 "target_components":component_sizes(target),
                  "status":"needs_inpaint" if missing_count else "visible_only_needs_review"}
         metadata.append(entry)
         if missing_count:
             job_dir = out / "jobs" / name
             job_dir.mkdir(exist_ok=True)
-            source.save(job_dir / "input.png")
+            conditioning = part.get('conditioning', 'original')
+            if conditioning not in ('original', 'material'):
+                raise ValueError(f'未知补图上下文：{conditioning}')
+            model_source = material_context(source,visible,target,layout) if conditioning == 'material' else source
+            model_source.save(job_dir / "input.png")
             full_mask = source_mask(missing, source.size, layout)
             full_mask.save(job_dir / "mask.png")
             default_prompt = f'chibi anime character {name}, continuous original material, same colors and illustration shading, repair occluded joint'
@@ -223,6 +283,7 @@ def _build(layout_path, out):
             prompt = part.get("prompt", default_prompt)
             job = {"part":name, "input":f"jobs/{name}/input.png", "mask":f"jobs/{name}/mask.png",
                    "prompt":prompt, "seed":20261015, "steps":20, "status":"prepared",
+                   "conditioning":conditioning,
                    "source_sha256":layout["source_sha256"], "crop":layout["crop"],
                    "downsample":layout["downsample"], "native_missing_pixels":missing_count}
             write_json(job_dir / "job.json", job)

@@ -121,7 +121,7 @@ def heading(doc, text, level=1):
     return paragraph
 
 
-def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", parts_dir=""):
+def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", parts_dir="", motion_dir=""):
     doc = Document()
 
     style = doc.styles["Normal"]
@@ -152,7 +152,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(14)
-    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-15（Q 版分层与补洞候选验证）")
+    run = subtitle.add_run("记录计划、过程与结果 · 更新于 2026-10-15（Q 版分层蒙皮离屏验证）")
     set_run(run, size=10.5)
 
     body(doc,
@@ -164,8 +164,9 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
          "计划表、常用文件、视频网站三个功能还只是占位按钮，等待后续实现。"
          "最新一轮把目标提到骨骼动画（关节要能连续弯），并新增被鼠标拎起来与招手两个动作，"
          "性能验证已经通过，当前正制作用户确认的 Q 版分层素材；"
-         "ComfyUI 已就绪，分层与补洞候选仍需通过正式验收。OpenSpec 已完成 12/29 项，"
-         "本轮进展与剩余问题见第十三节。")
+         "ComfyUI 已就绪，分层蒙皮已能离屏绘制真实部件，隐藏材质与正式动作仍需验收。"
+         "OpenSpec 复核后为 11/29 项：原 3.2 仅有骨架线验证，已恢复未完成。"
+         "本轮进展与剩余问题见第十三、十四节。")
 
     heading(doc, "一、项目目标与分步计划")
     body(doc,
@@ -531,8 +532,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
         caption = doc.add_paragraph()
         caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
         caption.paragraph_format.space_after = Pt(10)
-        run = caption.add_run("图 2　网格变形验收：上排是弯曲结果，下排叠了网格线；"
-                              "四列依次是 0、15、30、45 度，关节处都是连续弧线，没有缺口")
+        run = caption.add_run("图 2　网格弯曲验证 上排为贴图 下排为网格 四列依次为 0、15、30、45 度")
         set_run(run, size=9)
     body(doc,
          "第二组接着把骨树、双骨 IK 和说明文档做完（当时 29 项任务里已完成 6 项）。"
@@ -557,7 +557,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
          "肩关节与肘关节在现有扁平立绘上看不出来，暂时按估计值放，"
          "等美术返工做出分层部件后再量真实位置。")
     body(doc,
-         "第三组「链式柔性」做完时改过一次方案。第一版按设计文档的思路把单摆串成链，"
+         "第三组「链式柔性」数值验证时改过一次方案。第一版按设计文档的思路把单摆串成链，"
          "结果被自检直接证伪：所有链节等长、固有频率相同，每一级都正好踩在上一级的共振点上，"
          "越往下振幅越大，最后死死卡在限位上不收敛——把限位从 40 度收到 8 度，"
          "后两节依然精确停在 8 度，说明不是限位的问题。"
@@ -620,7 +620,47 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
     body(doc,
          "下一步优先修正候选分层的遮挡关系，逐部件检查关节补图；补齐独立袖子与张开手掌，"
          "完成全产线重复执行和极限姿态验收后，再把素材接入 PetWindow。"
+         "当前候选范围已完整运行两遍，目录结构一致，163 个受比对的输入和产物文件哈希相同；"
+         "完整素材清单仍未包括张开手掌，所以这不代表任务 7.3 完成。"
          "项目已设置每 30 分钟持续追踪，仅在进展、失败或需要处理的事项发生变化时通知。")
+
+    heading(doc, "十四 实机反馈与分层蒙皮预览")
+    body(doc,
+         "用户在桌面运行版中发现待机僵硬和切割、手发衣摆不动、双腿像矩形贴片移动。"
+         "已按要求关闭桌宠，本轮只做离屏验证。运行版仍是 BodyRig 四矩形路径，"
+         "没有直接使用新候选；本节记录的是替换前的技术与素材验证。")
+    body(doc,
+         "layout v2 将误归给杖的蓝色发梢、误归给头部的杖轮廓、误归给头发的灯穗分回对应部件。"
+         "双侧长发、袖子和衣摆补出隐藏连接轮廓，22 层共需执行 16 项补洞。"
+         "长发生成输入只引用本层颜色，避免邻近手部与灯穗污染材质；已有可见像素始终保留。"
+         "这些调整改善了候选，但连通块为一块并不代表材质与动作已经合格。")
+    body(doc,
+         "新的 LayeredRig 使用按材质限定的骨头集合；同一肢体各层共用网格与权重，"
+         "使腿部运动不再拉动木杖或头发。手臂、双腿、发丝、袖子和衣摆可在离屏图中实际弯曲。"
+         "绘制跳过透明三角形，单骨层直接绘制，并使用整数 RGBA 合成控制成本。"
+         "预览角度来自周期函数，尚未接入 Verlet、IK 或正式动作状态机。")
+    if motion_dir:
+        motion = Path(motion_dir)
+        report = json.loads((motion / 'report.json').read_text(encoding='utf-8'))
+        timing = report['timing_ms_png_io_excluded']
+        make_table(doc, ['离屏检查', '结果与边界'], [
+            ['静止图', f'参考重组差异 {report["rest_rgba_difference_pixels"]}；实际渲染差异 {report["rest_render_difference_pixels"]} 个 RGBA 像素'],
+            ['连续预览', f'{report["frames_per_cycle"] * report["cycles"]} 帧，{report["cycles"]} 轮周期；首尾差异 {report["rendered_cycle_closure_difference_pixels"]}。周期函数不等于正式动作连续性验收'],
+            ['裁切检查', f'本组样本顶点均在 {report["padding_px"]} 原生像素留边内：{report["all_tested_vertices_inside_padding"]}；不代表所有动作包络合格'],
+            ['求值耗时', f'平均 {timing["update"]["mean"]:.3f} ms，P95 {timing["update"]["p95"]:.3f} ms'],
+            ['绘制耗时', f'平均 {timing["draw"]["mean"]:.3f} ms，P95 {timing["draw"]["p95"]:.3f} ms；不含 PNG 写盘与完整窗口成本'],
+        ], widths=[3.5,11.5])
+        p = doc.add_paragraph()
+        p.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        p.add_run().add_picture(str(motion/'poses.png'), width=Cm(15))
+        caption = doc.add_paragraph()
+        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_run(caption.add_run('图 4 分层蒙皮诊断姿态 仍需修正隐藏材质与髋部遮挡'), size=9)
+    body(doc,
+         "代码审查发现非有限坐标可能误通过画布边界检查，现已增加回归并拒绝该情况。"
+         "正式接入前仍要处理隐藏发丝的颜色和轮廓、髋部拉伸与遮挡，补张开手掌，"
+         "将自然摆动与既有动作迁到分层蒙皮，再验证极限动作、窗口裁切、命中和实机观感。"
+         "OpenSpec 2.3、3.2、4.1、4.2、7.1 至 7.3 均保持未完成；候选 runtime_ready 为 false。")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
@@ -634,8 +674,9 @@ def main():
     parser.add_argument("--figure-mesh", default="")
     parser.add_argument("--figure-skeleton", default="")
     parser.add_argument("--parts-dir", default="", help="包含分层与补洞报告的产出目录")
+    parser.add_argument("--motion-dir", default="", help="包含分层离屏报告与姿态图的目录")
     args = parser.parse_args()
-    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton, args.parts_dir)
+    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton, args.parts_dir, args.motion_dir)
     print("已生成:", path)
 
 

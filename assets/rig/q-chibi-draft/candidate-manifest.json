@@ -3,7 +3,7 @@
   "runtime_ready": false,
   "source": "assets/像素角色/master-transparent-800.png",
   "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
-  "layout_sha256": "6f2aaf6834e145969e9047e2bd15aba4dec08d0c76a5a41040090b229bbc046b",
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
   "crop": [
     139,
     81,
@@ -26,25 +26,25 @@
       "name": "hairNear",
       "bone": "hairNear",
       "file": "layers/hairNear.png",
-      "sha256": "4de35df936767473c4a1e97e664e50e2943230a5d763d0cf36bf0fc53e6f5844"
+      "sha256": "754416fa7093cea223c2487d89ec0882710c873cadbf382463c619082e5cfeba"
     },
     {
       "name": "hairFar",
       "bone": "hairFar",
       "file": "layers/hairFar.png",
-      "sha256": "36d450161a32f7527caeb0718c3409ca1ff72bdcb6835e56c9bbbe30acbbb6da"
+      "sha256": "0d482537f3371526933bd6f2ac5f5c49650025a188e4ae1c79327f4df11eedc8"
     },
     {
       "name": "coatNear",
       "bone": "coatNear",
       "file": "layers/coatNear.png",
-      "sha256": "2742fdffe4658b0633b4eb9882d5ebaa10b6339de4f480fa892d2d3f4fc4d574"
+      "sha256": "42d85bc3521ce9e9ae7399358482ecf8eee7f2a76d47110d6ce1eba15705ad59"
     },
     {
       "name": "coatFar",
       "bone": "coatFar",
       "file": "layers/coatFar.png",
-      "sha256": "4e00a8580617cffc719b66056cb52b639e63b30eaae6bd8046a0d50b2c60c0d3"
+      "sha256": "bd702f58d011475a3fdcd64535f6f38d7b698d1575e89753c874ce8eb332e976"
     },
     {
       "name": "thighNear",
@@ -74,7 +74,7 @@
       "name": "footNear",
       "bone": "footNear",
       "file": "layers/footNear.png",
-      "sha256": "67a140df236c64c605861ba0bf831da2ab07b81a52c307e7acb2336893a99685"
+      "sha256": "8281b7831c9c026046e8bef060707ebb6b532d2ce2e8f8aa00d7e7a737b5ff6c"
     },
     {
       "name": "footFar",
@@ -86,7 +86,7 @@
       "name": "foreArm",
       "bone": "foreArm",
       "file": "layers/foreArm.png",
-      "sha256": "7ab5650ea0c8996f5776ef31e6b67e4400875e5c141cfaf141452b816026aaf9"
+      "sha256": "18aa9c4feb1ac6f257f81de857fe60d36b8c812bfd71f843a7718aa1c3731c04"
     },
     {
       "name": "upperArm",
@@ -98,7 +98,7 @@
       "name": "sleeveNear",
       "bone": "sleeveNear",
       "file": "layers/sleeveNear.png",
-      "sha256": "088f9d57cc39ee583926f3e6184f5134e073e18ee6033f4f1b9b36528529939c"
+      "sha256": "37e30be18f89a9bbcefe0ad90fbf081a558d755bbd09d3ef67d94f8784c0062d"
     },
     {
       "name": "foreArmFar",
@@ -110,13 +110,13 @@
       "name": "upperArmFar",
       "bone": "upperArmFar",
       "file": "layers/upperArmFar.png",
-      "sha256": "c193f0f36118ec5de4a8ccffd30647e1676047b14b2c3d951f07f3ecd3d0a317"
+      "sha256": "f857d863844a3392fccbec4bb2e6cf9262cc1e4d65a107ecf81de5fe18d1ef65"
     },
     {
       "name": "sleeveFar",
       "bone": "sleeveFar",
       "file": "layers/sleeveFar.png",
-      "sha256": "68b9361a82104b162f818f1532694421f45eb5687f65cb45182b983460f9ee90"
+      "sha256": "fe8e59b888c1a74fafa143f3e494661a15fbccd818f608682b4f419f60397084"
     },
     {
       "name": "handFar",
@@ -128,19 +128,19 @@
       "name": "head",
       "bone": "head",
       "file": "layers/head.png",
-      "sha256": "043165c7de1118522a5b3186b71e55b2ad6ac87a90c5e3d6900b65036c9edc55"
+      "sha256": "b52d9f6cd013f71394df6ab71fbbed814f7b9d90f82804314dd18a32d3369ab0"
     },
     {
       "name": "staff",
       "bone": "staff",
       "file": "layers/staff.png",
-      "sha256": "e2870afd071d9e498279a9fd5948778508b99c8ac1c71d8c22f9537df5cb98f8"
+      "sha256": "fcf0cbbe5cb87ce97ff38a8428c92e110703ba5acc74a2db5437330560f1a63c"
     },
     {
       "name": "lantern",
       "bone": "lantern",
       "file": "layers/lantern.png",
-      "sha256": "0fe69013dc009dac309d5e137acdd809c28e63f8ea69f3ca5ce4f07183d5fecb"
+      "sha256": "60deea57d894d938db2a3c348f6ec9f87f38abeecf02424e0d60585ea515977d"
     },
     {
       "name": "hand",
