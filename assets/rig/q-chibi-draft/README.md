@@ -2,6 +2,11 @@
 
 本目录保存当前阶段的 22 层候选，不是已经验收的运行素材。`runtime_ready` 保持 false。
 
+**2026-10-15 最新用户反馈：腿部视觉验收仍未通过。** 当前 ±7°预览仅保留为修改前基线，
+下一轮目标改为约 12°；需解决画面左腿近乎不动、双腿像跳动，以及画面右腿抬起时仍向内凹陷的问题。
+脚踝是待排查线索，不是已确认原因。明日优先任务和证据入口见 `openspec/changes/skeletal-pet-animation/tasks.md` 顶部。
+以下报告描述已有实现与数值检查，不代表这次新要求已经完成。
+
 - 来源及各层 SHA-256：`candidate-manifest.json`；分层坐标与骨头名见上级 `q-chibi.layout.json`。
 - `layers/`：包含补片的 105×123 RGBA 层，均保持同一画布与原点。
 - `filled-comparison.png`：原姿态拼回对照；`filled-layers.png`：各层联系表。
