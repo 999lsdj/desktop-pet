@@ -71,6 +71,63 @@ public final class RigPreview {
         ImageIO.write(skinCheckSheet(rig), "png", skinOut.toFile());
         System.out.println("skin check -> " + skinOut);
         skinSelfCheck(rig);
+        chainSelfCheck();
+    }
+
+    /**
+     * 链式自检：给挂点一个横向阶跃，看整条链摆起来之后会不会收敛、会不会发散。
+     * 判据是"后 1 秒的残余振幅远小于前 1 秒"，以及数值没有变成 NaN、角度没有越过限位。
+     */
+    private static void chainSelfCheck() {
+        int linkCount = 4;
+        double dt = 1.0 / 120;
+        double gravity = 900;
+        double maxAngleDeg = 40;
+        PendulumChain chain = new PendulumChain(linkCount, maxAngleDeg, 12, 1.1, 5.0, 0.25);
+
+        // 预热一秒，让有限差分的速度有基准，避免第一帧就把加速度算爆
+        chain.setAnchor(0, 0);
+        for (int i = 0; i < 120; i++) {
+            chain.update(dt, gravity);
+        }
+
+        // 阶跃：挂点一帧内横向挪 30 像素，相当于甩了一下
+        chain.setAnchor(30, 0);
+        chain.update(dt, gravity);
+
+        int frames = (int) Math.round(4 / dt);
+        double firstSecond = 0;
+        double lastSecond = 0;
+        double maxAbs = 0;
+        boolean finite = true;
+        for (int f = 0; f < frames; f++) {
+            chain.update(dt, gravity);
+            for (int i = 0; i < linkCount; i++) {
+                double a = chain.linkAngleDeg(i);
+                if (!Double.isFinite(a)) {
+                    finite = false;
+                    continue;
+                }
+                maxAbs = Math.max(maxAbs, Math.abs(a));
+                if (f < 120) {
+                    firstSecond = Math.max(firstSecond, Math.abs(a));
+                }
+                if (f >= frames - 120) {
+                    lastSecond = Math.max(lastSecond, Math.abs(a));
+                }
+            }
+        }
+        double ratio = lastSecond <= 1e-9 ? Double.POSITIVE_INFINITY : firstSecond / lastSecond;
+        Log.info(String.format("链式自检 %d 节：阶跃后最大摆角 %.2f 度（限位 %.0f 度）；"
+                        + "前 1 秒振幅 %.2f 度、后 1 秒残余 %.4f 度，衰减 %.0f 倍；数值%s",
+                linkCount, maxAbs, maxAngleDeg, firstSecond, lastSecond, ratio,
+                finite ? "正常" : "出现 NaN/Inf"));
+        if (!finite || maxAbs > maxAngleDeg + 1e-6) {
+            Log.error("链式自检不通过：数值异常或角度越过限位", null);
+        }
+        if (lastSecond > firstSecond * 0.2) {
+            Log.error("链式自检不通过：4 秒后仍未收敛到 20% 以内", null);
+        }
     }
 
     /** 蒙皮验收图：整张图按骨骼权重变形，看关节处是不是连续弯、有没有缺口。 */
