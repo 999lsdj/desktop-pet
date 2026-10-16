@@ -1,0 +1,179 @@
+{
+  "prompt": [
+    110,
+    "ba02a003-1827-48f8-bc2e-269f39f66f5e",
+    {
+      "1": {
+        "class_type": "CheckpointLoaderSimple",
+        "inputs": {
+          "ckpt_name": "sd_xl_base_1.0_inpainting_0.1.safetensors"
+        }
+      },
+      "2": {
+        "class_type": "LoadImage",
+        "inputs": {
+          "image": "pet-c665cfaa8f2a45acb13d0b928ad94c36-input.png"
+        }
+      },
+      "3": {
+        "class_type": "LoadImageMask",
+        "inputs": {
+          "image": "pet-c665cfaa8f2a45acb13d0b928ad94c36-mask.png",
+          "channel": "red"
+        }
+      },
+      "4": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "text": "chibi anime character upperArmFar, continuous original material, same colors and illustration shading, repair occluded joint",
+          "clip": [
+            "1",
+            1
+          ]
+        }
+      },
+      "5": {
+        "class_type": "CLIPTextEncode",
+        "inputs": {
+          "text": "photograph, realistic, blurry, text, watermark, extra fingers",
+          "clip": [
+            "1",
+            1
+          ]
+        }
+      },
+      "6": {
+        "class_type": "InpaintModelConditioning",
+        "inputs": {
+          "positive": [
+            "4",
+            0
+          ],
+          "negative": [
+            "5",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ],
+          "pixels": [
+            "2",
+            0
+          ],
+          "mask": [
+            "3",
+            0
+          ],
+          "noise_mask": true
+        }
+      },
+      "7": {
+        "class_type": "KSampler",
+        "inputs": {
+          "model": [
+            "1",
+            0
+          ],
+          "positive": [
+            "6",
+            0
+          ],
+          "negative": [
+            "6",
+            1
+          ],
+          "latent_image": [
+            "6",
+            2
+          ],
+          "seed": 20261015,
+          "steps": 20,
+          "cfg": 5.0,
+          "sampler_name": "euler",
+          "scheduler": "normal",
+          "denoise": 1.0
+        }
+      },
+      "8": {
+        "class_type": "VAEDecode",
+        "inputs": {
+          "samples": [
+            "7",
+            0
+          ],
+          "vae": [
+            "1",
+            2
+          ]
+        }
+      },
+      "9": {
+        "class_type": "SaveImage",
+        "inputs": {
+          "images": [
+            "8",
+            0
+          ],
+          "filename_prefix": "pet-inpaint/c665cfaa8f2a45acb13d0b928ad94c36"
+        }
+      }
+    },
+    {
+      "client_id": "c665cfaa8f2a45acb13d0b928ad94c36",
+      "create_time": 1792072076739
+    },
+    [
+      "9"
+    ]
+  ],
+  "outputs": {
+    "9": {
+      "images": [
+        {
+          "filename": "c665cfaa8f2a45acb13d0b928ad94c36_00001_.png",
+          "subfolder": "pet-inpaint",
+          "type": "output"
+        }
+      ]
+    }
+  },
+  "status": {
+    "status_str": "success",
+    "completed": true,
+    "messages": [
+      [
+        "execution_start",
+        {
+          "prompt_id": "ba02a003-1827-48f8-bc2e-269f39f66f5e",
+          "timestamp": 1792072076740
+        }
+      ],
+      [
+        "execution_cached",
+        {
+          "nodes": [
+            "1"
+          ],
+          "prompt_id": "ba02a003-1827-48f8-bc2e-269f39f66f5e",
+          "timestamp": 1792072076754
+        }
+      ],
+      [
+        "execution_success",
+        {
+          "prompt_id": "ba02a003-1827-48f8-bc2e-269f39f66f5e",
+          "timestamp": 1792072094439
+        }
+      ]
+    ]
+  },
+  "meta": {
+    "9": {
+      "node_id": "9",
+      "display_node": "9",
+      "parent_node": null,
+      "real_node_id": "9"
+    }
+  }
+}

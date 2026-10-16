@@ -1,0 +1,3005 @@
+{
+  "layout": {
+    "version": 2,
+    "status": "draft_needs_inpaint_and_pose_review",
+    "source": "assets/像素角色/master-transparent-800.png",
+    "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+    "native": "assets/像素角色/sprite-base-105x123.png",
+    "native_sha256": "47e70a01c1dfc490935f55a07d83a7e475bc610b6d399e5c5b94c9ce0176f7cb",
+    "source_size": [
+      800,
+      800
+    ],
+    "native_size": [
+      105,
+      123
+    ],
+    "crop": [
+      139,
+      81,
+      664,
+      696
+    ],
+    "downsample": 5,
+    "overlap": 3,
+    "coordinate_system": "native pixel centers; x right, y down; polygons assigned back to front",
+    "parts": [
+      {
+        "name": "torso",
+        "bone": "torso",
+        "polygons": [
+          [
+            [
+              39,
+              46
+            ],
+            [
+              58,
+              46
+            ],
+            [
+              65,
+              63
+            ],
+            [
+              65,
+              80
+            ],
+            [
+              35,
+              80
+            ],
+            [
+              35,
+              61
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              39,
+              46
+            ],
+            [
+              58,
+              46
+            ],
+            [
+              65,
+              63
+            ],
+            [
+              65,
+              80
+            ],
+            [
+              35,
+              80
+            ],
+            [
+              35,
+              61
+            ]
+          ]
+        ],
+        "prompt": "chibi girl torso, continuous white coat and white blouse, gold necklace, black shorts, no hair over torso, no arms over torso, same anime illustration shading"
+      },
+      {
+        "name": "hairNear",
+        "bone": "hairNear",
+        "conditioning": "material",
+        "polygons": [
+          [
+            [
+              30,
+              39
+            ],
+            [
+              39,
+              43
+            ],
+            [
+              37,
+              55
+            ],
+            [
+              29,
+              66
+            ],
+            [
+              23,
+              79
+            ],
+            [
+              24,
+              90
+            ],
+            [
+              20,
+              95
+            ],
+            [
+              16,
+              92
+            ],
+            [
+              15,
+              83
+            ],
+            [
+              19,
+              66
+            ],
+            [
+              25,
+              55
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              30,
+              39
+            ],
+            [
+              39,
+              43
+            ],
+            [
+              37,
+              55
+            ],
+            [
+              29,
+              66
+            ],
+            [
+              23,
+              79
+            ],
+            [
+              24,
+              90
+            ],
+            [
+              20,
+              95
+            ],
+            [
+              16,
+              92
+            ],
+            [
+              15,
+              83
+            ],
+            [
+              19,
+              66
+            ],
+            [
+              25,
+              55
+            ]
+          ]
+        ],
+        "prompt": "continuous long dark blue teal hair strand, flowing down behind the sleeve, blue hair highlights, no arm no skin no white fabric, same chibi anime illustration"
+      },
+      {
+        "name": "hairFar",
+        "bone": "hairFar",
+        "conditioning": "material",
+        "polygons": [
+          [
+            [
+              65,
+              35
+            ],
+            [
+              76,
+              40
+            ],
+            [
+              82,
+              52
+            ],
+            [
+              88,
+              61
+            ],
+            [
+              104,
+              66
+            ],
+            [
+              104,
+              95
+            ],
+            [
+              85,
+              96
+            ],
+            [
+              70,
+              91
+            ],
+            [
+              64,
+              75
+            ],
+            [
+              61,
+              52
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              65,
+              35
+            ],
+            [
+              76,
+              40
+            ],
+            [
+              82,
+              52
+            ],
+            [
+              88,
+              61
+            ],
+            [
+              104,
+              66
+            ],
+            [
+              104,
+              95
+            ],
+            [
+              85,
+              96
+            ],
+            [
+              70,
+              91
+            ],
+            [
+              64,
+              75
+            ],
+            [
+              61,
+              52
+            ]
+          ]
+        ],
+        "prompt": "continuous long dark blue teal hair with pale blue highlights, flowing behind the shoulder and sleeve, no arm no skin, same chibi anime illustration"
+      },
+      {
+        "name": "coatNear",
+        "bone": "coatNear",
+        "polygons": [
+          [
+            [
+              34,
+              73
+            ],
+            [
+              43,
+              79
+            ],
+            [
+              41,
+              97
+            ],
+            [
+              34,
+              103
+            ],
+            [
+              20,
+              116
+            ],
+            [
+              2,
+              118
+            ],
+            [
+              2,
+              112
+            ],
+            [
+              23,
+              96
+            ],
+            [
+              27,
+              81
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              34,
+              73
+            ],
+            [
+              43,
+              79
+            ],
+            [
+              41,
+              97
+            ],
+            [
+              34,
+              103
+            ],
+            [
+              20,
+              116
+            ],
+            [
+              2,
+              118
+            ],
+            [
+              2,
+              112
+            ],
+            [
+              23,
+              96
+            ],
+            [
+              27,
+              81
+            ]
+          ]
+        ],
+        "prompt": "continuous flowing white coat tail with dark purple inner lining, shaded white fabric with grey folds, no legs no skin, same chibi anime illustration"
+      },
+      {
+        "name": "coatFar",
+        "bone": "coatFar",
+        "polygons": [
+          [
+            [
+              59,
+              73
+            ],
+            [
+              68,
+              77
+            ],
+            [
+              72,
+              87
+            ],
+            [
+              82,
+              94
+            ],
+            [
+              104,
+              98
+            ],
+            [
+              104,
+              103
+            ],
+            [
+              84,
+              104
+            ],
+            [
+              101,
+              114
+            ],
+            [
+              88,
+              119
+            ],
+            [
+              68,
+              101
+            ],
+            [
+              61,
+              88
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              59,
+              73
+            ],
+            [
+              68,
+              77
+            ],
+            [
+              72,
+              87
+            ],
+            [
+              82,
+              94
+            ],
+            [
+              104,
+              98
+            ],
+            [
+              104,
+              103
+            ],
+            [
+              84,
+              104
+            ],
+            [
+              101,
+              114
+            ],
+            [
+              88,
+              119
+            ],
+            [
+              68,
+              101
+            ],
+            [
+              61,
+              88
+            ]
+          ]
+        ],
+        "prompt": "continuous flowing white coat tail with dark grey inner lining and grey folds, no legs no skin, same chibi anime illustration"
+      },
+      {
+        "name": "thighNear",
+        "bone": "thighNear",
+        "polygons": [
+          [
+            [
+              38,
+              79
+            ],
+            [
+              51,
+              79
+            ],
+            [
+              52,
+              97
+            ],
+            [
+              40,
+              97
+            ],
+            [
+              36,
+              86
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "thighFar",
+        "bone": "thighFar",
+        "polygons": [
+          [
+            [
+              51,
+              79
+            ],
+            [
+              62,
+              79
+            ],
+            [
+              66,
+              97
+            ],
+            [
+              53,
+              99
+            ],
+            [
+              50,
+              90
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "shinNear",
+        "bone": "shinNear",
+        "polygons": [
+          [
+            [
+              40,
+              96
+            ],
+            [
+              52,
+              96
+            ],
+            [
+              52,
+              110
+            ],
+            [
+              41,
+              112
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "shinFar",
+        "bone": "shinFar",
+        "polygons": [
+          [
+            [
+              53,
+              96
+            ],
+            [
+              66,
+              96
+            ],
+            [
+              69,
+              110
+            ],
+            [
+              56,
+              112
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "footNear",
+        "bone": "footNear",
+        "polygons": [
+          [
+            [
+              39,
+              107
+            ],
+            [
+              53,
+              107
+            ],
+            [
+              55,
+              122
+            ],
+            [
+              33,
+              122
+            ],
+            [
+              34,
+              116
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "footFar",
+        "bone": "footFar",
+        "polygons": [
+          [
+            [
+              56,
+              107
+            ],
+            [
+              69,
+              107
+            ],
+            [
+              72,
+              122
+            ],
+            [
+              54,
+              122
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "foreArm",
+        "bone": "foreArm",
+        "polygons": [],
+        "reconstruct": [
+          [
+            [
+              29,
+              61
+            ],
+            [
+              33,
+              66
+            ],
+            [
+              24,
+              72
+            ],
+            [
+              22,
+              66
+            ]
+          ]
+        ],
+        "prompt": "chibi girl inner white sleeve forearm extending to left wrist, white fabric, continuous clean sleeve, same anime illustration style"
+      },
+      {
+        "name": "upperArm",
+        "bone": "upperArm",
+        "polygons": [
+          [
+            [
+              39,
+              49
+            ],
+            [
+              43,
+              53
+            ],
+            [
+              37,
+              64
+            ],
+            [
+              32,
+              62
+            ],
+            [
+              34,
+              56
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "sleeveNear",
+        "bone": "sleeveNear",
+        "polygons": [
+          [
+            [
+              32,
+              59
+            ],
+            [
+              38,
+              60
+            ],
+            [
+              35,
+              72
+            ],
+            [
+              31,
+              78
+            ],
+            [
+              27,
+              83
+            ],
+            [
+              23,
+              79
+            ],
+            [
+              21,
+              71
+            ],
+            [
+              24,
+              65
+            ]
+          ]
+        ],
+        "prompt": "chibi white wide flowing coat sleeve, grey folds, dark lining and dark cuff, no hand inside the fabric, same anime illustration shading",
+        "reconstruct": [
+          [
+            [
+              32,
+              59
+            ],
+            [
+              38,
+              60
+            ],
+            [
+              35,
+              72
+            ],
+            [
+              31,
+              78
+            ],
+            [
+              27,
+              83
+            ],
+            [
+              23,
+              79
+            ],
+            [
+              21,
+              71
+            ],
+            [
+              24,
+              65
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "foreArmFar",
+        "bone": "foreArmFar",
+        "polygons": [],
+        "reconstruct": [
+          [
+            [
+              68,
+              64
+            ],
+            [
+              73,
+              64
+            ],
+            [
+              79,
+              75
+            ],
+            [
+              75,
+              79
+            ]
+          ]
+        ],
+        "prompt": "chibi girl inner white sleeve forearm pointing down right, same anime illustration style"
+      },
+      {
+        "name": "upperArmFar",
+        "bone": "upperArmFar",
+        "polygons": [
+          [
+            [
+              62,
+              49
+            ],
+            [
+              66,
+              50
+            ],
+            [
+              70,
+              60
+            ],
+            [
+              68,
+              65
+            ],
+            [
+              64,
+              61
+            ],
+            [
+              60,
+              55
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "sleeveFar",
+        "bone": "sleeveFar",
+        "polygons": [
+          [
+            [
+              67,
+              58
+            ],
+            [
+              73,
+              60
+            ],
+            [
+              78,
+              68
+            ],
+            [
+              82,
+              73
+            ],
+            [
+              77,
+              78
+            ],
+            [
+              71,
+              81
+            ],
+            [
+              67,
+              76
+            ],
+            [
+              65,
+              66
+            ]
+          ]
+        ],
+        "prompt": "chibi white wide flowing coat sleeve, grey folds, dark lining and dark cuff, same anime illustration shading",
+        "reconstruct": [
+          [
+            [
+              67,
+              58
+            ],
+            [
+              73,
+              60
+            ],
+            [
+              78,
+              68
+            ],
+            [
+              82,
+              73
+            ],
+            [
+              77,
+              78
+            ],
+            [
+              71,
+              81
+            ],
+            [
+              67,
+              76
+            ],
+            [
+              65,
+              66
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "handFar",
+        "bone": "handFar",
+        "polygons": [
+          [
+            [
+              76,
+              75
+            ],
+            [
+              79,
+              74
+            ],
+            [
+              83,
+              77
+            ],
+            [
+              82,
+              80
+            ],
+            [
+              78,
+              82
+            ],
+            [
+              73,
+              79
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "head",
+        "bone": "head",
+        "polygons": [
+          [
+            [
+              25,
+              0
+            ],
+            [
+              74,
+              0
+            ],
+            [
+              78,
+              32
+            ],
+            [
+              73,
+              42
+            ],
+            [
+              65,
+              43
+            ],
+            [
+              61,
+              54
+            ],
+            [
+              57,
+              58
+            ],
+            [
+              58,
+              44
+            ],
+            [
+              47,
+              49
+            ],
+            [
+              40,
+              47
+            ],
+            [
+              39,
+              59
+            ],
+            [
+              35,
+              54
+            ],
+            [
+              34,
+              44
+            ],
+            [
+              26,
+              40
+            ],
+            [
+              24,
+              34
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "staff",
+        "bone": "staff",
+        "polygons": [
+          [
+            [
+              0,
+              14
+            ],
+            [
+              16,
+              14
+            ],
+            [
+              28,
+              25
+            ],
+            [
+              28,
+              44
+            ],
+            [
+              21,
+              49
+            ],
+            [
+              22,
+              63
+            ],
+            [
+              25,
+              79
+            ],
+            [
+              28,
+              99
+            ],
+            [
+              34,
+              122
+            ],
+            [
+              27,
+              122
+            ],
+            [
+              24,
+              99
+            ],
+            [
+              21,
+              79
+            ],
+            [
+              18,
+              58
+            ],
+            [
+              16,
+              51
+            ],
+            [
+              5,
+              51
+            ],
+            [
+              3,
+              44
+            ],
+            [
+              8,
+              38
+            ],
+            [
+              0,
+              38
+            ]
+          ]
+        ],
+        "reconstruct": [
+          [
+            [
+              19,
+              64
+            ],
+            [
+              22,
+              64
+            ],
+            [
+              24,
+              75
+            ],
+            [
+              20,
+              75
+            ]
+          ]
+        ],
+        "prompt": "continuous narrow dark brown wooden staff shaft, straight wooden rod, no fingers, no hand, same chibi anime illustration shading"
+      },
+      {
+        "name": "lantern",
+        "bone": "lantern",
+        "polygons": [
+          [
+            [
+              6,
+              49
+            ],
+            [
+              10,
+              49
+            ],
+            [
+              12,
+              57
+            ],
+            [
+              19,
+              64
+            ],
+            [
+              19,
+              73
+            ],
+            [
+              21,
+              76
+            ],
+            [
+              20,
+              80
+            ],
+            [
+              19,
+              83
+            ],
+            [
+              19,
+              97
+            ],
+            [
+              1,
+              97
+            ],
+            [
+              0,
+              77
+            ],
+            [
+              0,
+              63
+            ],
+            [
+              6,
+              55
+            ]
+          ]
+        ]
+      },
+      {
+        "name": "hand",
+        "bone": "hand",
+        "polygons": [
+          [
+            [
+              19,
+              66
+            ],
+            [
+              22,
+              65
+            ],
+            [
+              23,
+              68
+            ],
+            [
+              25,
+              66
+            ],
+            [
+              27,
+              69
+            ],
+            [
+              25,
+              73
+            ],
+            [
+              22,
+              74
+            ],
+            [
+              19,
+              72
+            ]
+          ]
+        ],
+        "prompt": "small chibi girl hand holding a staff, pale skin, same anime illustration shading"
+      }
+    ],
+    "joints": [
+      {
+        "name": "neck",
+        "parent": "torso",
+        "child": "head",
+        "pivot": [
+          49,
+          47
+        ],
+        "radius": 3,
+        "angles": [
+          -15,
+          15
+        ],
+        "moves": [
+          "head",
+          "hairNear",
+          "hairFar"
+        ]
+      },
+      {
+        "name": "shoulderNear",
+        "parent": "torso",
+        "child": "upperArm",
+        "pivot": [
+          39,
+          51
+        ],
+        "radius": 3,
+        "angles": [
+          -70,
+          25
+        ],
+        "moves": [
+          "upperArm",
+          "foreArm",
+          "sleeveNear",
+          "hand"
+        ]
+      },
+      {
+        "name": "elbowNear",
+        "parent": "upperArm",
+        "child": "foreArm",
+        "pivot": [
+          33,
+          62
+        ],
+        "radius": 3,
+        "angles": [
+          -80,
+          25
+        ],
+        "moves": [
+          "foreArm",
+          "sleeveNear",
+          "hand"
+        ]
+      },
+      {
+        "name": "wristNear",
+        "parent": "foreArm",
+        "child": "hand",
+        "pivot": [
+          25,
+          69
+        ],
+        "radius": 2,
+        "angles": [
+          -25,
+          25
+        ],
+        "moves": [
+          "hand"
+        ]
+      },
+      {
+        "name": "shoulderFar",
+        "parent": "torso",
+        "child": "upperArmFar",
+        "pivot": [
+          63,
+          51
+        ],
+        "radius": 3,
+        "angles": [
+          -25,
+          35
+        ],
+        "moves": [
+          "upperArmFar",
+          "foreArmFar",
+          "sleeveFar",
+          "handFar"
+        ]
+      },
+      {
+        "name": "elbowFar",
+        "parent": "upperArmFar",
+        "child": "foreArmFar",
+        "pivot": [
+          70,
+          63
+        ],
+        "radius": 3,
+        "angles": [
+          -35,
+          35
+        ],
+        "moves": [
+          "foreArmFar",
+          "sleeveFar",
+          "handFar"
+        ]
+      },
+      {
+        "name": "wristFar",
+        "parent": "foreArmFar",
+        "child": "handFar",
+        "pivot": [
+          78,
+          77
+        ],
+        "radius": 2,
+        "angles": [
+          -25,
+          25
+        ],
+        "moves": [
+          "handFar"
+        ]
+      },
+      {
+        "name": "hipNear",
+        "parent": "torso",
+        "child": "thighNear",
+        "pivot": [
+          44,
+          81
+        ],
+        "radius": 3,
+        "angles": [
+          -25,
+          25
+        ],
+        "moves": [
+          "thighNear",
+          "shinNear",
+          "footNear"
+        ]
+      },
+      {
+        "name": "kneeNear",
+        "parent": "thighNear",
+        "child": "shinNear",
+        "pivot": [
+          46,
+          97
+        ],
+        "radius": 3,
+        "angles": [
+          -10,
+          45
+        ],
+        "moves": [
+          "shinNear",
+          "footNear"
+        ]
+      },
+      {
+        "name": "ankleNear",
+        "parent": "shinNear",
+        "child": "footNear",
+        "pivot": [
+          46,
+          108
+        ],
+        "radius": 3,
+        "angles": [
+          -20,
+          20
+        ],
+        "moves": [
+          "footNear"
+        ]
+      },
+      {
+        "name": "hipFar",
+        "parent": "torso",
+        "child": "thighFar",
+        "pivot": [
+          56,
+          81
+        ],
+        "radius": 3,
+        "angles": [
+          -25,
+          25
+        ],
+        "moves": [
+          "thighFar",
+          "shinFar",
+          "footFar"
+        ]
+      },
+      {
+        "name": "kneeFar",
+        "parent": "thighFar",
+        "child": "shinFar",
+        "pivot": [
+          59,
+          97
+        ],
+        "radius": 3,
+        "angles": [
+          -10,
+          45
+        ],
+        "moves": [
+          "shinFar",
+          "footFar"
+        ]
+      },
+      {
+        "name": "ankleFar",
+        "parent": "shinFar",
+        "child": "footFar",
+        "pivot": [
+          62,
+          108
+        ],
+        "radius": 3,
+        "overlap": 4,
+        "angles": [
+          -20,
+          20
+        ],
+        "moves": [
+          "footFar"
+        ]
+      }
+    ]
+  },
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+  "layers": [
+    {
+      "name": "torso",
+      "bone": "torso",
+      "bounds": [
+        35,
+        46,
+        64,
+        79
+      ],
+      "visible_pixels": 655,
+      "missing_pixels": 426,
+      "layer": "layers/torso.png",
+      "visible_components": [
+        655
+      ],
+      "target_components": [
+        1081
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "hairNear",
+      "bone": "hairNear",
+      "bounds": [
+        20,
+        46,
+        35,
+        93
+      ],
+      "visible_pixels": 123,
+      "missing_pixels": 280,
+      "layer": "layers/hairNear.png",
+      "visible_components": [
+        99,
+        24
+      ],
+      "target_components": [
+        400,
+        3
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "hairFar",
+      "bone": "hairFar",
+      "bounds": [
+        62,
+        40,
+        105,
+        96
+      ],
+      "visible_pixels": 1127,
+      "missing_pixels": 523,
+      "layer": "layers/hairFar.png",
+      "visible_components": [
+        1086,
+        41
+      ],
+      "target_components": [
+        1650
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "coatNear",
+      "bone": "coatNear",
+      "bounds": [
+        4,
+        74,
+        42,
+        118
+      ],
+      "visible_pixels": 542,
+      "missing_pixels": 217,
+      "layer": "layers/coatNear.png",
+      "visible_components": [
+        281,
+        261
+      ],
+      "target_components": [
+        759
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "coatFar",
+      "bone": "coatFar",
+      "bounds": [
+        59,
+        73,
+        105,
+        118
+      ],
+      "visible_pixels": 718,
+      "missing_pixels": 62,
+      "layer": "layers/coatFar.png",
+      "visible_components": [
+        718
+      ],
+      "target_components": [
+        780
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "thighNear",
+      "bone": "thighNear",
+      "bounds": [
+        36,
+        79,
+        52,
+        96
+      ],
+      "visible_pixels": 225,
+      "missing_pixels": 29,
+      "layer": "layers/thighNear.png",
+      "visible_components": [
+        225
+      ],
+      "target_components": [
+        254
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "thighFar",
+      "bone": "thighFar",
+      "bounds": [
+        50,
+        79,
+        67,
+        100
+      ],
+      "visible_pixels": 241,
+      "missing_pixels": 29,
+      "layer": "layers/thighFar.png",
+      "visible_components": [
+        240,
+        1
+      ],
+      "target_components": [
+        269,
+        1
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "shinNear",
+      "bone": "shinNear",
+      "bounds": [
+        39,
+        96,
+        53,
+        107
+      ],
+      "visible_pixels": 120,
+      "missing_pixels": 29,
+      "layer": "layers/shinNear.png",
+      "visible_components": [
+        120
+      ],
+      "target_components": [
+        149
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "shinFar",
+      "bone": "shinFar",
+      "bounds": [
+        53,
+        96,
+        70,
+        111
+      ],
+      "visible_pixels": 133,
+      "missing_pixels": 34,
+      "layer": "layers/shinFar.png",
+      "visible_components": [
+        130,
+        3
+      ],
+      "target_components": [
+        164,
+        3
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "footNear",
+      "bone": "footNear",
+      "bounds": [
+        34,
+        107,
+        55,
+        123
+      ],
+      "visible_pixels": 201,
+      "missing_pixels": 0,
+      "layer": "layers/footNear.png",
+      "visible_components": [
+        184,
+        16,
+        1
+      ],
+      "target_components": [
+        184,
+        16,
+        1
+      ],
+      "status": "visible_only_needs_review"
+    },
+    {
+      "name": "footFar",
+      "bone": "footFar",
+      "bounds": [
+        54,
+        107,
+        67,
+        123
+      ],
+      "visible_pixels": 174,
+      "missing_pixels": 0,
+      "layer": "layers/footFar.png",
+      "visible_components": [
+        174
+      ],
+      "target_components": [
+        174
+      ],
+      "status": "visible_only_needs_review"
+    },
+    {
+      "name": "foreArm",
+      "bone": "foreArm",
+      "bounds": null,
+      "visible_pixels": 0,
+      "missing_pixels": 110,
+      "layer": "layers/foreArm.png",
+      "visible_components": [],
+      "target_components": [
+        110
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "upperArm",
+      "bone": "upperArm",
+      "bounds": [
+        33,
+        51,
+        44,
+        64
+      ],
+      "visible_pixels": 41,
+      "missing_pixels": 62,
+      "layer": "layers/upperArm.png",
+      "visible_components": [
+        41
+      ],
+      "target_components": [
+        103
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "sleeveNear",
+      "bone": "sleeveNear",
+      "bounds": [
+        24,
+        59,
+        39,
+        84
+      ],
+      "visible_pixels": 202,
+      "missing_pixels": 56,
+      "layer": "layers/sleeveNear.png",
+      "visible_components": [
+        202
+      ],
+      "target_components": [
+        258
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "foreArmFar",
+      "bone": "foreArmFar",
+      "bounds": null,
+      "visible_pixels": 0,
+      "missing_pixels": 135,
+      "layer": "layers/foreArmFar.png",
+      "visible_components": [],
+      "target_components": [
+        135
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "upperArmFar",
+      "bone": "upperArmFar",
+      "bounds": [
+        61,
+        50,
+        70,
+        63
+      ],
+      "visible_pixels": 69,
+      "missing_pixels": 52,
+      "layer": "layers/upperArmFar.png",
+      "visible_components": [
+        69
+      ],
+      "target_components": [
+        84,
+        37
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "sleeveFar",
+      "bone": "sleeveFar",
+      "bounds": [
+        65,
+        58,
+        83,
+        82
+      ],
+      "visible_pixels": 231,
+      "missing_pixels": 22,
+      "layer": "layers/sleeveFar.png",
+      "visible_components": [
+        231
+      ],
+      "target_components": [
+        253
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "handFar",
+      "bone": "handFar",
+      "bounds": [
+        73,
+        74,
+        84,
+        83
+      ],
+      "visible_pixels": 57,
+      "missing_pixels": 0,
+      "layer": "layers/handFar.png",
+      "visible_components": [
+        57
+      ],
+      "target_components": [
+        57
+      ],
+      "status": "visible_only_needs_review"
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "bounds": [
+        29,
+        0,
+        79,
+        60
+      ],
+      "visible_pixels": 1777,
+      "missing_pixels": 0,
+      "layer": "layers/head.png",
+      "visible_components": [
+        1777
+      ],
+      "target_components": [
+        1777
+      ],
+      "status": "visible_only_needs_review"
+    },
+    {
+      "name": "staff",
+      "bone": "staff",
+      "bounds": [
+        2,
+        16,
+        35,
+        123
+      ],
+      "visible_pixels": 945,
+      "missing_pixels": 41,
+      "layer": "layers/staff.png",
+      "visible_components": [
+        691,
+        253,
+        1
+      ],
+      "target_components": [
+        986
+      ],
+      "status": "needs_inpaint"
+    },
+    {
+      "name": "lantern",
+      "bone": "lantern",
+      "bounds": [
+        0,
+        49,
+        22,
+        99
+      ],
+      "visible_pixels": 632,
+      "missing_pixels": 0,
+      "layer": "layers/lantern.png",
+      "visible_components": [
+        632
+      ],
+      "target_components": [
+        632
+      ],
+      "status": "visible_only_needs_review"
+    },
+    {
+      "name": "hand",
+      "bone": "hand",
+      "bounds": [
+        19,
+        65,
+        28,
+        75
+      ],
+      "visible_pixels": 60,
+      "missing_pixels": 0,
+      "layer": "layers/hand.png",
+      "visible_components": [
+        60
+      ],
+      "target_components": [
+        60
+      ],
+      "status": "visible_only_needs_review"
+    }
+  ],
+  "jobs": [
+    {
+      "part": "torso",
+      "input": "jobs/torso/input.png",
+      "mask": "jobs/torso/mask.png",
+      "prompt": "chibi girl torso, continuous white coat and white blouse, gold necklace, black shorts, no hair over torso, no arms over torso, same anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 426
+    },
+    {
+      "part": "hairNear",
+      "input": "jobs/hairNear/input.png",
+      "mask": "jobs/hairNear/mask.png",
+      "prompt": "continuous long dark blue teal hair strand, flowing down behind the sleeve, blue hair highlights, no arm no skin no white fabric, same chibi anime illustration",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "material",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 280
+    },
+    {
+      "part": "hairFar",
+      "input": "jobs/hairFar/input.png",
+      "mask": "jobs/hairFar/mask.png",
+      "prompt": "continuous long dark blue teal hair with pale blue highlights, flowing behind the shoulder and sleeve, no arm no skin, same chibi anime illustration",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "material",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 523
+    },
+    {
+      "part": "coatNear",
+      "input": "jobs/coatNear/input.png",
+      "mask": "jobs/coatNear/mask.png",
+      "prompt": "continuous flowing white coat tail with dark purple inner lining, shaded white fabric with grey folds, no legs no skin, same chibi anime illustration",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 217
+    },
+    {
+      "part": "coatFar",
+      "input": "jobs/coatFar/input.png",
+      "mask": "jobs/coatFar/mask.png",
+      "prompt": "continuous flowing white coat tail with dark grey inner lining and grey folds, no legs no skin, same chibi anime illustration",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 62
+    },
+    {
+      "part": "thighNear",
+      "input": "jobs/thighNear/input.png",
+      "mask": "jobs/thighNear/mask.png",
+      "prompt": "chibi girl leg, continuous pale skin, smooth knee joint, same original anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 29
+    },
+    {
+      "part": "thighFar",
+      "input": "jobs/thighFar/input.png",
+      "mask": "jobs/thighFar/mask.png",
+      "prompt": "chibi girl leg, continuous pale skin, smooth knee joint, same original anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 29
+    },
+    {
+      "part": "shinNear",
+      "input": "jobs/shinNear/input.png",
+      "mask": "jobs/shinNear/mask.png",
+      "prompt": "chibi girl leg, continuous pale skin, smooth knee joint, same original anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 29
+    },
+    {
+      "part": "shinFar",
+      "input": "jobs/shinFar/input.png",
+      "mask": "jobs/shinFar/mask.png",
+      "prompt": "chibi girl leg, continuous pale skin, smooth knee joint, same original anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 34
+    },
+    {
+      "part": "foreArm",
+      "input": "jobs/foreArm/input.png",
+      "mask": "jobs/foreArm/mask.png",
+      "prompt": "chibi girl inner white sleeve forearm extending to left wrist, white fabric, continuous clean sleeve, same anime illustration style",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 110
+    },
+    {
+      "part": "upperArm",
+      "input": "jobs/upperArm/input.png",
+      "mask": "jobs/upperArm/mask.png",
+      "prompt": "chibi anime character upperArm, continuous original material, same colors and illustration shading, repair occluded joint",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 62
+    },
+    {
+      "part": "sleeveNear",
+      "input": "jobs/sleeveNear/input.png",
+      "mask": "jobs/sleeveNear/mask.png",
+      "prompt": "chibi white wide flowing coat sleeve, grey folds, dark lining and dark cuff, no hand inside the fabric, same anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 56
+    },
+    {
+      "part": "foreArmFar",
+      "input": "jobs/foreArmFar/input.png",
+      "mask": "jobs/foreArmFar/mask.png",
+      "prompt": "chibi girl inner white sleeve forearm pointing down right, same anime illustration style",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 135
+    },
+    {
+      "part": "upperArmFar",
+      "input": "jobs/upperArmFar/input.png",
+      "mask": "jobs/upperArmFar/mask.png",
+      "prompt": "chibi anime character upperArmFar, continuous original material, same colors and illustration shading, repair occluded joint",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 52
+    },
+    {
+      "part": "sleeveFar",
+      "input": "jobs/sleeveFar/input.png",
+      "mask": "jobs/sleeveFar/mask.png",
+      "prompt": "chibi white wide flowing coat sleeve, grey folds, dark lining and dark cuff, same anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 22
+    },
+    {
+      "part": "staff",
+      "input": "jobs/staff/input.png",
+      "mask": "jobs/staff/mask.png",
+      "prompt": "continuous narrow dark brown wooden staff shaft, straight wooden rod, no fingers, no hand, same chibi anime illustration shading",
+      "seed": 20261015,
+      "steps": 20,
+      "status": "prepared",
+      "conditioning": "original",
+      "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+      "crop": [
+        139,
+        81,
+        664,
+        696
+      ],
+      "downsample": 5,
+      "native_missing_pixels": 41
+    }
+  ],
+  "joint_checks": [
+    {
+      "joint": "neck",
+      "angle": -15,
+      "gap_pixels": 2
+    },
+    {
+      "joint": "neck",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "neck",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "neck",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "neck",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "neck",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "neck",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -70,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -65,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -60,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -55,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -50,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -45,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -40,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -35,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -30,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderNear",
+      "angle": 25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -80,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -75,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -70,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -65,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -60,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -55,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -50,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -45,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -40,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -35,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -30,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "elbowNear",
+      "angle": 25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": -25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": -20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": -15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "wristNear",
+      "angle": 25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": -25,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": -20,
+      "gap_pixels": 2
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": -15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 25,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 30,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "shoulderFar",
+      "angle": 35,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -35,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -30,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 30,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "elbowFar",
+      "angle": 35,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": -25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "wristFar",
+      "angle": 25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": -25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "hipNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "hipNear",
+      "angle": 25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 25,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 30,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 35,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 40,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "kneeNear",
+      "angle": 45,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "ankleNear",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleNear",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "ankleNear",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "hipFar",
+      "angle": -25,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "hipFar",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "hipFar",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "hipFar",
+      "angle": 25,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 15,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 20,
+      "gap_pixels": 1
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 25,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 30,
+      "gap_pixels": 3
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 35,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 40,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "kneeFar",
+      "angle": 45,
+      "gap_pixels": 4
+    },
+    {
+      "joint": "ankleFar",
+      "angle": -20,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": -15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": -10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": -5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": 0,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": 5,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": 10,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": 15,
+      "gap_pixels": 0
+    },
+    {
+      "joint": "ankleFar",
+      "angle": 20,
+      "gap_pixels": 0
+    }
+  ]
+}

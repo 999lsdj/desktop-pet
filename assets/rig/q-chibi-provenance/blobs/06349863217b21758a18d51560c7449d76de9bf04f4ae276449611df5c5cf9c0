@@ -1,0 +1,17 @@
+{
+  "source": "E:\\李惠\\桌宠\\_tmp\\q-parts-motion\\jobs\\hairFar\\input.png",
+  "source_sha256": "781d980c5a50ea8f2b9b6a6e09bf4f2b7981231b3bb12fabaa4eedafcf655dbd",
+  "size": [
+    800,
+    800
+  ],
+  "mask_bbox": [
+    444,
+    256,
+    559,
+    556
+  ],
+  "seed": 20261015,
+  "steps": 20,
+  "smoke": false
+}

@@ -1,0 +1,152 @@
+{
+  "status": "draft_pending_visual_and_motion_review",
+  "runtime_ready": false,
+  "source": "assets/像素角色/master-transparent-800.png",
+  "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+  "crop": [
+    139,
+    81,
+    664,
+    696
+  ],
+  "downsample": 5,
+  "canvas_size": [
+    105,
+    123
+  ],
+  "layers": [
+    {
+      "name": "torso",
+      "bone": "torso",
+      "file": "layers/torso.png",
+      "sha256": "f3bf8b967d82d6d951125daf00414d1dd32e527d5298761007bc874ed424a58d"
+    },
+    {
+      "name": "hairNear",
+      "bone": "hairNear",
+      "file": "layers/hairNear.png",
+      "sha256": "754416fa7093cea223c2487d89ec0882710c873cadbf382463c619082e5cfeba"
+    },
+    {
+      "name": "hairFar",
+      "bone": "hairFar",
+      "file": "layers/hairFar.png",
+      "sha256": "0d482537f3371526933bd6f2ac5f5c49650025a188e4ae1c79327f4df11eedc8"
+    },
+    {
+      "name": "coatNear",
+      "bone": "coatNear",
+      "file": "layers/coatNear.png",
+      "sha256": "42d85bc3521ce9e9ae7399358482ecf8eee7f2a76d47110d6ce1eba15705ad59"
+    },
+    {
+      "name": "coatFar",
+      "bone": "coatFar",
+      "file": "layers/coatFar.png",
+      "sha256": "bd702f58d011475a3fdcd64535f6f38d7b698d1575e89753c874ce8eb332e976"
+    },
+    {
+      "name": "thighNear",
+      "bone": "thighNear",
+      "file": "layers/thighNear.png",
+      "sha256": "29ece8d0bccfd849976029b35c82614c6ffcd23d5c653cfe8279c498865f1439"
+    },
+    {
+      "name": "thighFar",
+      "bone": "thighFar",
+      "file": "layers/thighFar.png",
+      "sha256": "077688070cd0e7cd7239ccd2f7277c58825bed78cf4415ee1bccfef005e9a9a9"
+    },
+    {
+      "name": "shinNear",
+      "bone": "shinNear",
+      "file": "layers/shinNear.png",
+      "sha256": "37ab99d2d11d1a6e1aa0a597e1273d7a8f53ec20d00e475da348112649619139"
+    },
+    {
+      "name": "shinFar",
+      "bone": "shinFar",
+      "file": "layers/shinFar.png",
+      "sha256": "7b24e992e8380a96df8db14a43db10d7ed34eaf3c8b756974d41a54e022dde01"
+    },
+    {
+      "name": "footNear",
+      "bone": "footNear",
+      "file": "layers/footNear.png",
+      "sha256": "8281b7831c9c026046e8bef060707ebb6b532d2ce2e8f8aa00d7e7a737b5ff6c"
+    },
+    {
+      "name": "footFar",
+      "bone": "footFar",
+      "file": "layers/footFar.png",
+      "sha256": "ce385119f052d5a0d52e586f3a410fe81c026283e3aa4e9b7519d7ce58818467"
+    },
+    {
+      "name": "foreArm",
+      "bone": "foreArm",
+      "file": "layers/foreArm.png",
+      "sha256": "18aa9c4feb1ac6f257f81de857fe60d36b8c812bfd71f843a7718aa1c3731c04"
+    },
+    {
+      "name": "upperArm",
+      "bone": "upperArm",
+      "file": "layers/upperArm.png",
+      "sha256": "d4e60a89bb002cc137b623927267bfbb9ab7ede0abf7746718e9547f3f237024"
+    },
+    {
+      "name": "sleeveNear",
+      "bone": "sleeveNear",
+      "file": "layers/sleeveNear.png",
+      "sha256": "37e30be18f89a9bbcefe0ad90fbf081a558d755bbd09d3ef67d94f8784c0062d"
+    },
+    {
+      "name": "foreArmFar",
+      "bone": "foreArmFar",
+      "file": "layers/foreArmFar.png",
+      "sha256": "a88c05e284c390080739d2af532aa46a6abfb0aa46e33c680ddfed7a7400116d"
+    },
+    {
+      "name": "upperArmFar",
+      "bone": "upperArmFar",
+      "file": "layers/upperArmFar.png",
+      "sha256": "f857d863844a3392fccbec4bb2e6cf9262cc1e4d65a107ecf81de5fe18d1ef65"
+    },
+    {
+      "name": "sleeveFar",
+      "bone": "sleeveFar",
+      "file": "layers/sleeveFar.png",
+      "sha256": "fe8e59b888c1a74fafa143f3e494661a15fbccd818f608682b4f419f60397084"
+    },
+    {
+      "name": "handFar",
+      "bone": "handFar",
+      "file": "layers/handFar.png",
+      "sha256": "57659bbefa00fbea1eb1e22e1be74af710a29eb0cc4697eab8f9d22ee109c88c"
+    },
+    {
+      "name": "head",
+      "bone": "head",
+      "file": "layers/head.png",
+      "sha256": "b52d9f6cd013f71394df6ab71fbbed814f7b9d90f82804314dd18a32d3369ab0"
+    },
+    {
+      "name": "staff",
+      "bone": "staff",
+      "file": "layers/staff.png",
+      "sha256": "fcf0cbbe5cb87ce97ff38a8428c92e110703ba5acc74a2db5437330560f1a63c"
+    },
+    {
+      "name": "lantern",
+      "bone": "lantern",
+      "file": "layers/lantern.png",
+      "sha256": "60deea57d894d938db2a3c348f6ec9f87f38abeecf02424e0d60585ea515977d"
+    },
+    {
+      "name": "hand",
+      "bone": "hand",
+      "file": "layers/hand.png",
+      "sha256": "b5b031ebe3f1f35d2484581bf1bb8d2bb43bc98dd98a28b9c5c8f8bd14f201f5"
+    }
+  ]
+}

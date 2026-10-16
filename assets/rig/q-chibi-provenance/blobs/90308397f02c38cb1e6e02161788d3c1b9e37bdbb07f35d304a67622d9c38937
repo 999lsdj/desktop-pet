@@ -1,0 +1,17 @@
+{
+  "source": "E:\\李惠\\桌宠\\assets\\rig\\q-chibi-refined\\generation\\source.png",
+  "source_sha256": "790036ef646587fded6391b7073c6b065f23f2012dd1d2fc52728ca68eb7fbdc",
+  "size": [
+    560,
+    560
+  ],
+  "mask_bbox": [
+    100,
+    100,
+    381,
+    451
+  ],
+  "seed": 2026101601,
+  "steps": 24,
+  "smoke": false
+}

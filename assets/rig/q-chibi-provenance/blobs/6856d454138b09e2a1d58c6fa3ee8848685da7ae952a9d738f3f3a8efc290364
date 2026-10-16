@@ -1,0 +1,17 @@
+{
+  "source": "E:\\李惠\\桌宠\\_tmp\\q-parts-motion\\jobs\\coatFar\\input.png",
+  "source_sha256": "f5c2d5fe54075baa5dca957428016edf90b02d958f751b554a4f8f2529843049",
+  "size": [
+    800,
+    800
+  ],
+  "mask_bbox": [
+    439,
+    466,
+    489,
+    586
+  ],
+  "seed": 20261015,
+  "steps": 20,
+  "smoke": false
+}

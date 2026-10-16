@@ -1,0 +1,38 @@
+{
+  "status": "passed",
+  "prompt_id": "a8d9f46b-d52a-463a-8950-cc63ece7c767",
+  "elapsed_seconds": 18.86,
+  "full_size": {
+    "outside_changed_pixels": 0,
+    "inside_changed_pixels": 1025,
+    "mask_pixels": 1025
+  },
+  "native_size": [
+    160,
+    160
+  ],
+  "native_checks": {
+    "outside_changed_pixels": 0,
+    "inside_changed_pixels": 62,
+    "mask_pixels": 63
+  },
+  "downsample": 5,
+  "crop": [
+    0,
+    0,
+    800,
+    800
+  ],
+  "devices": [
+    {
+      "name": "cuda:0 NVIDIA GeForce RTX 4060 Laptop GPU : cudaMallocAsync",
+      "type": "cuda",
+      "index": 0,
+      "vram_total": 8585216000,
+      "vram_free": 1846237946,
+      "torch_vram_total": 33554432,
+      "torch_vram_free": 23304954
+    }
+  ],
+  "visual_review": "pending"
+}

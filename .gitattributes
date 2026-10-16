@@ -2,3 +2,5 @@
 assets/rig/*.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
 assets/rig/**/*.json -text whitespace=trailing-space,space-before-tab,cr-at-eol
 assets/rig/**/*.properties -text whitespace=trailing-space,space-before-tab,cr-at-eol
+# Content-addressed evidence includes extensionless JSON; never convert its bytes.
+assets/rig/q-chibi-provenance/blobs/* -text -diff
