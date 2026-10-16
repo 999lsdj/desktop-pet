@@ -1,0 +1,300 @@
+{
+  "status": "refined_pending_user_visual_review",
+  "runtime_ready": false,
+  "runtime_package_compatible": true,
+  "user_visual_acceptance": false,
+  "visual_review": "user_pending",
+  "method": "deterministic nearest original material, opaque occluded missing pixels only",
+  "canvas_size": [
+    105,
+    123
+  ],
+  "source_sha256": "240f11238c7162f6810497bef1f6aadb8c4a27ab54efc9d3158175ceac06e8b5",
+  "layout_sha256": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+  "candidate_manifest_sha256": "220a70e76693d88d11d8a0f389484d945b37cd38e7df67a899bfc37a7f2ff350",
+  "inpaint_report_sha256": "09f714597c242ea7e554762fb7924dfdf432066c23845684ccbacd0c459ec028",
+  "rest_changed_rgba_pixels": 0,
+  "layers": [
+    {
+      "name": "torso",
+      "input": "evidence/torso/input.png",
+      "mask": "evidence/torso/mask.png",
+      "output": "layers/torso.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "f3bf8b967d82d6d951125daf00414d1dd32e527d5298761007bc874ed424a58d",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "f3bf8b967d82d6d951125daf00414d1dd32e527d5298761007bc874ed424a58d"
+    },
+    {
+      "name": "hairNear",
+      "input": "evidence/hairNear/input.png",
+      "mask": "evidence/hairNear/mask.png",
+      "output": "layers/hairNear.png",
+      "changed_pixels": 108,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "754416fa7093cea223c2487d89ec0882710c873cadbf382463c619082e5cfeba",
+      "mask_sha256": "3a0b1bb15389ac0ae13a906a90a62f341f18ee097f4c520b6f412566c799e579",
+      "output_sha256": "685434d4be0e31173e2a045c69a60e28ca591ca5009a704623a42bb68cfc5f7a"
+    },
+    {
+      "name": "hairFar",
+      "input": "evidence/hairFar/input.png",
+      "mask": "evidence/hairFar/mask.png",
+      "output": "layers/hairFar.png",
+      "changed_pixels": 296,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "0d482537f3371526933bd6f2ac5f5c49650025a188e4ae1c79327f4df11eedc8",
+      "mask_sha256": "5e741de0adf3919648a1c40db405c1add6aa3d2538382f36579fc8ff2c46ed2b",
+      "output_sha256": "7cc7d630b8ec3a2196fcf1d4aaa0dc793c776171f9e87da68433c56c95cdfe3d"
+    },
+    {
+      "name": "coatNear",
+      "input": "evidence/coatNear/input.png",
+      "mask": "evidence/coatNear/mask.png",
+      "output": "layers/coatNear.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "42d85bc3521ce9e9ae7399358482ecf8eee7f2a76d47110d6ce1eba15705ad59",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "42d85bc3521ce9e9ae7399358482ecf8eee7f2a76d47110d6ce1eba15705ad59"
+    },
+    {
+      "name": "coatFar",
+      "input": "evidence/coatFar/input.png",
+      "mask": "evidence/coatFar/mask.png",
+      "output": "layers/coatFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "bd702f58d011475a3fdcd64535f6f38d7b698d1575e89753c874ce8eb332e976",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "bd702f58d011475a3fdcd64535f6f38d7b698d1575e89753c874ce8eb332e976"
+    },
+    {
+      "name": "thighNear",
+      "input": "evidence/thighNear/input.png",
+      "mask": "evidence/thighNear/mask.png",
+      "output": "layers/thighNear.png",
+      "changed_pixels": 17,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "29ece8d0bccfd849976029b35c82614c6ffcd23d5c653cfe8279c498865f1439",
+      "mask_sha256": "d779e38092d6a279bf7ebc60952797ef1f738e3e6d1c12200368563737d92737",
+      "output_sha256": "ebe43fb06be7b1b572ff7db10118012077572485b941e82a270e5253a0914ced"
+    },
+    {
+      "name": "thighFar",
+      "input": "evidence/thighFar/input.png",
+      "mask": "evidence/thighFar/mask.png",
+      "output": "layers/thighFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "077688070cd0e7cd7239ccd2f7277c58825bed78cf4415ee1bccfef005e9a9a9",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "077688070cd0e7cd7239ccd2f7277c58825bed78cf4415ee1bccfef005e9a9a9"
+    },
+    {
+      "name": "shinNear",
+      "input": "evidence/shinNear/input.png",
+      "mask": "evidence/shinNear/mask.png",
+      "output": "layers/shinNear.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "37ab99d2d11d1a6e1aa0a597e1273d7a8f53ec20d00e475da348112649619139",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "37ab99d2d11d1a6e1aa0a597e1273d7a8f53ec20d00e475da348112649619139"
+    },
+    {
+      "name": "shinFar",
+      "input": "evidence/shinFar/input.png",
+      "mask": "evidence/shinFar/mask.png",
+      "output": "layers/shinFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "7b24e992e8380a96df8db14a43db10d7ed34eaf3c8b756974d41a54e022dde01",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "7b24e992e8380a96df8db14a43db10d7ed34eaf3c8b756974d41a54e022dde01"
+    },
+    {
+      "name": "footNear",
+      "input": "evidence/footNear/input.png",
+      "mask": "evidence/footNear/mask.png",
+      "output": "layers/footNear.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "8281b7831c9c026046e8bef060707ebb6b532d2ce2e8f8aa00d7e7a737b5ff6c",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "8281b7831c9c026046e8bef060707ebb6b532d2ce2e8f8aa00d7e7a737b5ff6c"
+    },
+    {
+      "name": "footFar",
+      "input": "evidence/footFar/input.png",
+      "mask": "evidence/footFar/mask.png",
+      "output": "layers/footFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "ce385119f052d5a0d52e586f3a410fe81c026283e3aa4e9b7519d7ce58818467",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "ce385119f052d5a0d52e586f3a410fe81c026283e3aa4e9b7519d7ce58818467"
+    },
+    {
+      "name": "foreArm",
+      "input": "evidence/foreArm/input.png",
+      "mask": "evidence/foreArm/mask.png",
+      "output": "layers/foreArm.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "18aa9c4feb1ac6f257f81de857fe60d36b8c812bfd71f843a7718aa1c3731c04",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "18aa9c4feb1ac6f257f81de857fe60d36b8c812bfd71f843a7718aa1c3731c04"
+    },
+    {
+      "name": "upperArm",
+      "input": "evidence/upperArm/input.png",
+      "mask": "evidence/upperArm/mask.png",
+      "output": "layers/upperArm.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "d4e60a89bb002cc137b623927267bfbb9ab7ede0abf7746718e9547f3f237024",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "d4e60a89bb002cc137b623927267bfbb9ab7ede0abf7746718e9547f3f237024"
+    },
+    {
+      "name": "sleeveNear",
+      "input": "evidence/sleeveNear/input.png",
+      "mask": "evidence/sleeveNear/mask.png",
+      "output": "layers/sleeveNear.png",
+      "changed_pixels": 56,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "37e30be18f89a9bbcefe0ad90fbf081a558d755bbd09d3ef67d94f8784c0062d",
+      "mask_sha256": "646fb77201a698ece45cdeb86c0bd24b47f613cc56ab1ff8cbb875f93db1f5b4",
+      "output_sha256": "919578c6784a838fd3d482951366715abe345088e622ffdf357a3e6d98980987"
+    },
+    {
+      "name": "foreArmFar",
+      "input": "evidence/foreArmFar/input.png",
+      "mask": "evidence/foreArmFar/mask.png",
+      "output": "layers/foreArmFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "a88c05e284c390080739d2af532aa46a6abfb0aa46e33c680ddfed7a7400116d",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "a88c05e284c390080739d2af532aa46a6abfb0aa46e33c680ddfed7a7400116d"
+    },
+    {
+      "name": "upperArmFar",
+      "input": "evidence/upperArmFar/input.png",
+      "mask": "evidence/upperArmFar/mask.png",
+      "output": "layers/upperArmFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "f857d863844a3392fccbec4bb2e6cf9262cc1e4d65a107ecf81de5fe18d1ef65",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "f857d863844a3392fccbec4bb2e6cf9262cc1e4d65a107ecf81de5fe18d1ef65"
+    },
+    {
+      "name": "sleeveFar",
+      "input": "evidence/sleeveFar/input.png",
+      "mask": "evidence/sleeveFar/mask.png",
+      "output": "layers/sleeveFar.png",
+      "changed_pixels": 22,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "fe8e59b888c1a74fafa143f3e494661a15fbccd818f608682b4f419f60397084",
+      "mask_sha256": "ed81d8f14b44a57f0cf1e606862d5917a3fe5574339fa5fbb195eb2ef011fa8f",
+      "output_sha256": "1efaf9833dd5d858fcc0324ef8699fa9d45dcfab97aa888d518eb7fab5120d43"
+    },
+    {
+      "name": "handFar",
+      "input": "evidence/handFar/input.png",
+      "mask": "evidence/handFar/mask.png",
+      "output": "layers/handFar.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "57659bbefa00fbea1eb1e22e1be74af710a29eb0cc4697eab8f9d22ee109c88c",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "57659bbefa00fbea1eb1e22e1be74af710a29eb0cc4697eab8f9d22ee109c88c"
+    },
+    {
+      "name": "head",
+      "input": "evidence/head/input.png",
+      "mask": "evidence/head/mask.png",
+      "output": "layers/head.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "b52d9f6cd013f71394df6ab71fbbed814f7b9d90f82804314dd18a32d3369ab0",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "b52d9f6cd013f71394df6ab71fbbed814f7b9d90f82804314dd18a32d3369ab0"
+    },
+    {
+      "name": "staff",
+      "input": "evidence/staff/input.png",
+      "mask": "evidence/staff/mask.png",
+      "output": "layers/staff.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "fcf0cbbe5cb87ce97ff38a8428c92e110703ba5acc74a2db5437330560f1a63c",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "fcf0cbbe5cb87ce97ff38a8428c92e110703ba5acc74a2db5437330560f1a63c"
+    },
+    {
+      "name": "lantern",
+      "input": "evidence/lantern/input.png",
+      "mask": "evidence/lantern/mask.png",
+      "output": "layers/lantern.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "60deea57d894d938db2a3c348f6ec9f87f38abeecf02424e0d60585ea515977d",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "60deea57d894d938db2a3c348f6ec9f87f38abeecf02424e0d60585ea515977d"
+    },
+    {
+      "name": "hand",
+      "input": "evidence/hand/input.png",
+      "mask": "evidence/hand/mask.png",
+      "output": "layers/hand.png",
+      "changed_pixels": 0,
+      "original_visible_changed_pixels": 0,
+      "input_sha256": "b5b031ebe3f1f35d2484581bf1bb8d2bb43bc98dd98a28b9c5c8f8bd14f201f5",
+      "mask_sha256": "7868baaf069f184f8b847fab67ba99071b7b213c82a5d6bb5a1f8ef164d82aaf",
+      "output_sha256": "b5b031ebe3f1f35d2484581bf1bb8d2bb43bc98dd98a28b9c5c8f8bd14f201f5"
+    }
+  ],
+  "variant": {
+    "name": "handOpen",
+    "method": "comfyui_inpaint",
+    "guidance": "isolated silhouette; generated material clipped at native scale",
+    "replaces": "hand",
+    "sha256": "ed099be80e9fdfb0dbf588a97a67df26fed6bf776ab467e197d8eecddd6baba9",
+    "mask_sha256": "6b0670ab5430bc0464cba46f8dc6b8705ab638c368694ad11edfdf825aa6a58a",
+    "input_sha256": "614a01e7236d121353baabc78acc9a2cf67b3fd007d47683d830c33c14464c1b",
+    "generated_sha256": "8309da10cc1b507ee2088a46b9caf07cdb78ebf7397b9281330f6865b184cedc",
+    "generation_manifest_sha256": "fc8b2f5025847d6f8c0ec8db2498efde7de0ed07d50480e20ef2e3b6163e8e15"
+  },
+  "known_limits": [
+    "Open hand is a generated candidate clipped to a separate silhouette; user art review pending.",
+    "Original visible hip/shorts pixels are immutable; dynamic occlusion must also be verified with runtime deformation.",
+    "Nearest-material completion is conservative and cannot establish user aesthetic approval."
+  ],
+  "outline_checks": {
+    "hairNear": {
+      "components": [
+        400,
+        3
+      ]
+    },
+    "hairFar": {
+      "components": [
+        1650
+      ]
+    },
+    "sleeveNear": {
+      "components": [
+        258
+      ]
+    },
+    "sleeveFar": {
+      "components": [
+        253
+      ]
+    }
+  }
+}

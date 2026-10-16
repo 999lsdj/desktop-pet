@@ -1,0 +1,19 @@
+{
+  "input_kind": "isolated open-hand silhouette guide; original default hand is untouched",
+  "generated_size": [
+    560,
+    560
+  ],
+  "native_canvas": [
+    105,
+    123
+  ],
+  "native_crop_origin": [
+    11,
+    49
+  ],
+  "native_crop_size": [
+    28,
+    28
+  ]
+}
