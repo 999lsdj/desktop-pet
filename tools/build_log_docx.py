@@ -121,8 +121,12 @@ def heading(doc, text, level=1):
     return paragraph
 
 
-def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", parts_dir="", motion_dir=""):
+def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", parts_dir="", motion_dir="", production_dir=""):
     doc = Document()
+    root = Path(__file__).resolve().parent.parent
+    task_lines = (root / 'openspec/changes/skeletal-pet-animation/tasks.md').read_text(encoding='utf-8').splitlines()
+    task_count = sum(line.startswith(('- [x]', '- [ ]')) for line in task_lines)
+    done_count = sum(line.startswith('- [x]') for line in task_lines)
 
     style = doc.styles["Normal"]
     style.font.name = FONT
@@ -152,7 +156,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(14)
-    run = subtitle.add_run("记录计划、过程与结果  更新于 2026-10-16  双腿步幅与脚掌方向修正")
+    run = subtitle.add_run("记录计划、过程与结果  更新于 2026-10-16  素材精修与正式动画接入")
     set_run(run, size=10.5)
 
     body(doc,
@@ -163,10 +167,10 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
          "第五步「让桌宠动起来」也已完成，并在被退回一次后返工做对；"
          "计划表、常用文件、视频网站三个功能还只是占位按钮，等待后续实现。"
          "最新一轮把目标提到骨骼动画（关节要能连续弯），并新增被鼠标拎起来与招手两个动作，"
-         "性能验证已经通过，当前正制作用户确认的 Q 版分层素材；"
-         "ComfyUI 已就绪，分层蒙皮已能离屏绘制真实部件，隐藏材质与正式动作仍需验收。"
-         "OpenSpec 复核后为 11/29 项：原 3.2 仅有骨架线验证，已恢复未完成。"
-         "本轮进展与剩余问题见第十三至十五节。")
+         "当前已精修 Q 版隐藏材质，并把分层蒙皮、接地步态与衣发柔性接入正式窗口代码。"
+         "桌宠保持关闭，用户观感、组合动作及桌面交互仍待验收。"
+         f"OpenSpec 当前完成 {done_count}/{task_count} 项。"
+         "最新结论见第十六节；前文保留各阶段的历史状态。")
 
     heading(doc, "一、项目目标与分步计划")
     body(doc,
@@ -688,6 +692,45 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
          "交替弯膝不等于脚底稳定支撑，也不能据此认定跳动观感已解决。下一步先处理脚底接地、两靴交叉遮挡与自然步态，"
          "再继续隐藏材质、张开手掌、衣发柔性和运行版接入。OpenSpec 仍为 11/29，桌宠保持关闭。")
 
+    if production_dir:
+        production = Path(production_dir)
+        metrics = json.loads((production / 'self-test.json').read_text(encoding='utf-8'))
+        validation = json.loads((root / 'assets/rig/q-chibi-provenance/validation.json').read_text(encoding='utf-8'))
+        heading(doc, "十六 素材精修与正式动画接入")
+        body(doc,
+             "2026 年 10 月 16 日，22 层 Q 版素材完成本轮精修，PetWindow 已改用 PetAnimation 与 LayeredRig。"
+             "下一次按用户要求启动时将使用这一版本。此次没有运行 pet.Main；本节结果来自同一求值器的离屏验证，"
+             "并非用户已认可成品。第十三至十五节中尚未接入、脚底接地未求解等表述为历史记录。")
+        body(doc,
+             "精修只修改 499 个隐藏像素，处理双侧蓝发、袖布和髋部生成黑块，原绘可见像素、蒙版外 RGBA 与静止重组差异均为 0。"
+             "备用张开手掌采用独立轮廓引导与 ComfyUI 材质生成，保留输入、蒙版、输出和两轮尝试；默认仍握杖。"
+             "髋以上短裤固定到躯干，髋下平滑接入大腿权重，避免短裤随腿拉伸。")
+        make_table(doc, ['正式动作检查', '结果与边界'], [
+            ['交替步态', f'实际髋半行程 {metrics["hip_half_range_deg"][0]:.3f}° / {metrics["hip_half_range_deg"][1]:.3f}°；两侧踝横向行程均 {metrics["ankle_stride_px"][0]:.3f} 原生像素'],
+            ['接地与脚掌', f'{metrics["phase_samples"]} 相位覆盖三个周期，稳定支撑高度误差 {metrics["stable_support_height_error_px"]:.6f} 像素，脚掌方向误差 {metrics["foot_angle_error_deg"]:.6f}°；起停渐变另行验收'],
+            ['衣发随动', f'发丝、袖子、衣摆使用 Verlet，提灯使用单摆；柔性峰值 {metrics["flex_peak_deg"]:.3f}°，停步六秒后 {metrics["flex_after_six_seconds_deg"]:.3f}°'],
+        ], widths=[3.3,11.7])
+        body(doc,
+             "抬脚高度收为 0.6 原生像素，站姿屈膝下移 0.8 像素；移除旧的整体周期跳动。"
+             "打盹时杖固定在地面，握点由手臂 IK 跟随。已输出走路、停步、微醺、踉跄、打盹和菜单六状态，"
+             "另有 26 个关节极限端点和备用掌心姿态。三轮走路与停步衰减有回归，不能代替所有动作循环的验收。")
+        picture = doc.add_paragraph()
+        picture.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        picture.add_run().add_picture(str(production/'legs.png'), width=Cm(15))
+        caption = doc.add_paragraph()
+        caption.alignment = WD_ALIGN_PARAGRAPH.CENTER
+        set_run(caption.add_run('图 5 正式接地步态八相位 用户观感仍待复核'), size=9)
+        body(doc,
+             "完整来源缓存保存 16 项原补洞及掌心的输入、模型结果和工作流。build-refined-pipeline.py "
+             "实际重新拆件、重放锁定的模型结果并执行精修；新目录与同目录重跑均通过，"
+             f'两次实际命令的 {validation["file_count"]} 个产物文件 SHA 一致。'
+             "这是缓存重建，不是重新执行 16 次模型推理，也不依赖旧临时目录或正在运行的 ComfyUI。")
+        body(doc,
+             f"当前 OpenSpec 为 {done_count}/{task_count}。素材状态仍为 runtime_ready:false，集成报告另记 runtime_integrated:true。"
+             "技术接入和人工放行分开记录；还要复核腿部交叉遮挡与膝踝轮廓、隐藏材质与组合动作，"
+             "继续拎起悬挂、完整放杖招手循环，以及窗口裁切、命中和端到端验收。"
+             "六状态动画、原始报告与源码绑定位于 assets/rig/production-preview；本轮同步不勾选最终收尾任务 9.4。")
+
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)
     return out_path
@@ -701,8 +744,9 @@ def main():
     parser.add_argument("--figure-skeleton", default="")
     parser.add_argument("--parts-dir", default="", help="包含分层与补洞报告的产出目录")
     parser.add_argument("--motion-dir", default="", help="包含分层离屏报告与姿态图的目录")
+    parser.add_argument("--production-dir", default=str(Path(__file__).resolve().parent.parent/'assets/rig/production-preview'), help="包含正式动画报告与腿部相位图的目录")
     args = parser.parse_args()
-    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton, args.parts_dir, args.motion_dir)
+    path = build(args.out, args.figure, args.figure_mesh, args.figure_skeleton, args.parts_dir, args.motion_dir, args.production_dir)
     print("已生成:", path)
 
 
