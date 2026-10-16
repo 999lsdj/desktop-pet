@@ -15,7 +15,6 @@ import java.awt.MenuItem;
 import java.awt.Point;
 import java.awt.PopupMenu;
 import java.awt.RenderingHints;
-import java.awt.Shape;
 import java.awt.SystemTray;
 import java.awt.Toolkit;
 import java.awt.TrayIcon;
@@ -27,7 +26,6 @@ import java.awt.geom.Ellipse2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.geom.RoundRectangle2D;
 import java.awt.image.BufferedImage;
-import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Random;
 
@@ -36,26 +34,16 @@ import java.util.Random;
  *
  * 两个关键实现点：
  * 1) 绘制在设备像素空间进行（启动加 -Dsun.java2d.uiScale=1），像素图按整数倍放大不发虚。
- * 2) 窗口裁剪形状由"动作范围包络"生成：把角色在极限姿态下各渲染一次并取并集，
- *    这样身体倾斜、提灯甩动、迈步时都不会被自己的窗口形状切掉。
+ * 2) 裁剪与命中读取正式动画同一帧的 alpha 行段，并为骨架动态预留画布边距。
  */
 public final class PetWindow extends JWindow {
 
     private enum State { WALK, PAUSE, REST, MENU, HIDDEN }
 
     static final int SPRITE_SCALE = 2;
-    private static final int GROUND_PAD = 12;
+    private static final int GROUND_PAD = PetAnimation.PADDING * SPRITE_SCALE;
     /** 累的时候向后靠的角度（负数＝朝提灯那一侧） */
     private static final double REST_LEAN = -13;
-    /** 放下后提灯自己立在地上的倾斜角 */
-    private static final double PLACED_LEAN = 12;
-    /** 放下时提灯相对握点额外挪开的距离与位置 */
-    private static final double PLACED_DX = -26;
-    /** 身体左右摇摆的极限（度），用于生成窗口形状包络 */
-    private static final double TILT_ENVELOPE = 16;
-    /** 提灯摆动的极限（度），用于生成窗口形状包络 */
-    private static final double STAFF_ENVELOPE = 35;
-
     private static final double[] MENU_ANGLES = {200, 270, 340};
     private static final String[] BUTTON_NAMES = {"计划表", "常用文件", "视频网站"};
     private static final PixelIcon[] BUTTON_ICONS =
@@ -63,10 +51,10 @@ public final class PetWindow extends JWindow {
 
     private final Config config;
     private final boolean still;
-    private final BodyRig rig;
+    private final LayeredRig rig;
+    private final PetAnimation animation;
     private final Random random = new Random();
     private final FullscreenWatcher watcher;
-    private final Pendulum pendulum;
 
     private final double dpiScale;
     private final int spriteW;
@@ -80,7 +68,6 @@ public final class PetWindow extends JWindow {
     private final int buttonDiameter;
     private final int fontSize;
     private final double walkSpeed;
-    private final Shape envelopeShape;
 
     private State state = State.PAUSE;
     private double posX;
@@ -93,22 +80,20 @@ public final class PetWindow extends JWindow {
     private long nextRestAt;
     private long nextStumbleAt;
     private long stumbleUntil;
-    private double walkPhase;
     private double restAmount;      // 0 站着，1 靠着睡
-    private double staffPlace;      // 0 握在手里，1 立在身边
     private boolean pendingMenu;
     private double menuProgress;
     private long menuAnimStart;
     private boolean menuAnimating;
+    private double menuFrom, menuTarget;
     private int hoverIndex = -1;
     private boolean hoverBody;
     private double speedFactor = 1.0;
     private String bubble;
     private long bubbleUntil;
 
-    private double gripPrevX;
-    private double gripVel;
-    private double lastStepPhase;
+    private double animationTravel;
+    private long nextAnimationLog;
 
     private Point pressScreen;
     private Point pressWindow;
@@ -126,7 +111,8 @@ public final class PetWindow extends JWindow {
         fontSize = (int) Math.round(13 * dpiScale);
         walkSpeed = config.d("walk.speed.logical", 30) * dpiScale;
 
-        rig = BodyRig.load(Paths.get("assets", "sprites", "pet-base.png").toAbsolutePath());
+        rig = LayeredRig.load(Paths.get("assets", "rig", "q-chibi-refined").toAbsolutePath());
+        animation = new PetAnimation(rig, config);
         spriteW = rig.width() * SPRITE_SCALE;
         spriteH = rig.height() * SPRITE_SCALE;
 
@@ -135,25 +121,19 @@ public final class PetWindow extends JWindow {
         // 窗口要同时容得下"站着的角色"和"立在身边的提灯"
         int leftRoom = (int) Math.ceil(Math.max(spriteW / 2.0,
                 menuRadius * Math.cos(Math.toRadians(20)) + buttonDiameter / 2.0))
-                + (int) Math.round(30 * dpiScale);
-        int rightRoom = spriteW / 2 + (int) Math.round(30 * dpiScale);
+                + PetAnimation.PADDING * SPRITE_SCALE;
+        int rightRoom = spriteW / 2 + PetAnimation.PADDING * SPRITE_SCALE;
         groundX = leftRoom;
         windowW = groundX + rightRoom;
         groundY = headroom + spriteH;
         chestY = groundY - (int) Math.round(spriteH * 0.58);
-
-        envelopeShape = buildEnvelopeShape();
-
-        pendulum = new Pendulum(config.d("lantern.max.deg", 35),
-                config.d("lantern.length.device", 70),
-                config.d("lantern.damping", 0.9));
 
         setBackground(new Color(0, 0, 0, 0));
         setAlwaysOnTop(true);
         setSize(new Dimension(windowW, windowH));
         placeInitially();
         try {
-            setShape(envelopeShape);
+            setShape(animation.shape(groundX, groundY, SPRITE_SCALE, mirrored));
         } catch (Exception e) {
             Log.error("窗口裁剪失败", e);
         }
@@ -254,8 +234,7 @@ public final class PetWindow extends JWindow {
     private void updateState(double dt) {
         switch (state) {
             case WALK -> {
-                posX += dir * walkSpeed * speedFactor * dt;
-                walkPhase += dt * 5.2 * speedFactor;
+                if (!dragging) posX += dir * walkSpeed * speedFactor * dt;
                 Dimension screen = Toolkit.getDefaultToolkit().getScreenSize();
                 if (posX < 0) {
                     posX = 0;
@@ -275,14 +254,9 @@ public final class PetWindow extends JWindow {
             }
             case REST -> {
                 restAmount = Math.min(1.0, restAmount + dt / 1.1);
-                staffPlace = Math.min(1.0, staffPlace + dt / 0.7);
                 if (now > stateUntil && restAmount > 0.98) {
                     wakeUp(false);
                 }
-            }
-            case MENU -> {
-                restAmount = Math.max(0.0, restAmount - dt / 0.8);
-                staffPlace = Math.max(0.0, staffPlace - dt / 0.5);
             }
             default -> {
             }
@@ -300,19 +274,20 @@ public final class PetWindow extends JWindow {
             stumbleUntil = now + 520;
             nextStumbleAt = now + randSeconds("stumble.interval.min.sec", 20,
                     "stumble.interval.max.sec", 40) * 1000L;
-            pendulum.kick(1.4 * (random.nextBoolean() ? 1 : -1));
             Log.info("踉跄一下");
         }
         if (menuAnimating) {
             double t = Math.min(1.0, (now - menuAnimStart) / 180.0);
-            menuProgress = menuProgress > 0.5 ? ease(t) : 1 - ease(t);
+            menuProgress = menuFrom + (menuTarget - menuFrom) * ease(t);
             if (t >= 1.0) {
-                menuProgress = menuProgress > 0.5 ? 1 : 0;
+                menuProgress = menuTarget;
                 menuAnimating = false;
             }
-            applyShape();
         }
-        setLocation((int) Math.round(posX), (int) Math.round(groundLine) - groundY);
+        if (!dragging) setLocation((int) Math.round(posX), (int) Math.round(groundLine) - groundY);
+        if (state != State.REST) {
+            restAmount = Math.max(0, restAmount - dt / 0.8);
+        }
     }
 
     private double currentTilt() {
@@ -327,50 +302,24 @@ public final class PetWindow extends JWindow {
         return sway + stumble + restAmount * REST_LEAN;
     }
 
-    private double currentBob() {
-        if (state == State.WALK) {
-            // 步频与迈步同相，走起来才有踩地的节奏
-            return -Math.abs(Math.sin(walkPhase)) * config.d("bob.device.px", 4);
-        }
-        return Math.sin(2 * Math.PI * now / 1000.0 / config.d("sway.period.sec", 1.5))
-                * config.d("bob.device.px", 4) * 0.5 * (1 - 0.6 * restAmount);
-    }
-
     private void updateMotion(double dt) {
-        double tilt = currentTilt();
-        double gripLocalX = (rig.grip().x - rig.width() / 2.0) * SPRITE_SCALE;
-        double gripLocalY = (rig.grip().y - rig.height()) * SPRITE_SCALE;
-        double rad = Math.toRadians(tilt);
-        double flipSign = mirrored ? -1 : 1;
-        double gripWorldX = getX() + groundX + flipSign * (gripLocalX * Math.cos(rad) - gripLocalY * Math.sin(rad));
-        double velocity = (gripWorldX - gripPrevX) / dt;
-        double accel = (velocity - gripVel) / dt;
-        gripPrevX = gripWorldX;
-        gripVel = velocity;
-
-        if (restAmount > 0.05 || staffPlace > 0.05) {
-            // 放下了就不再甩
-            pendulum.setDamping(config.d("lantern.damping", 0.9) * 2.5);
-        } else {
-            pendulum.setDamping(config.d("lantern.damping", 0.9));
-            // 走路的每一步都给提灯一个推力，这是灯甩起来的主要来源
-            if (state == State.WALK && walkPhase - lastStepPhase > Math.PI) {
-                lastStepPhase = walkPhase;
-                pendulum.kick((random.nextBoolean() ? 1 : -1) * 0.32);
-            }
-            if (state != State.WALK) {
-                lastStepPhase = walkPhase;
-            }
+        double speed = state == State.WALK && !dragging ? walkSpeed * speedFactor / SPRITE_SCALE : 0;
+        animationTravel += speed * dt;
+        animation.update(dt, state == State.WALK && !dragging, speed, currentTilt(), restAmount,
+                menuProgress, animationTravel);
+        applyShape();
+        if (now >= nextAnimationLog) {
+            Log.info(String.format(java.util.Locale.ROOT,
+                    "分层动画 state=%s phase=%.3f blend=%.3f eval=%.3fms raster=%.3fms",
+                    state, animation.phase(), animation.walkBlend(), rig.lastUpdateMs(), rig.lastDrawMs()));
+            nextAnimationLog = now + 5000;
         }
-        double gain = config.d("lantern.drive.gain", 5.0);
-        pendulum.update(dt, accel * gain, config.d("lantern.gravity", 900));
         repaint();
     }
 
     private void turn() {
         dir = -dir;
         mirrored = !mirrored;
-        pendulum.kick(1.1 * dir);
     }
 
     private void enterWalk() {
@@ -380,17 +329,13 @@ public final class PetWindow extends JWindow {
             return;
         }
         state = State.WALK;
-        walkPhase = 0;
-        lastStepPhase = 0;
         nextWalkEnd = now + randSeconds("walk.stretch.min.sec", 8, "walk.stretch.max.sec", 20) * 1000L;
-        pendulum.kick(1.2);
         Log.info("开始踱步（" + (dir > 0 ? "向右" : "向左") + "）");
     }
 
     private void enterPause() {
         state = State.PAUSE;
         stateUntil = now + randSeconds("walk.pause.min.sec", 3, "walk.pause.max.sec", 10) * 1000L;
-        pendulum.kick(-0.9);
         Log.info("停下歇一会");
     }
 
@@ -412,11 +357,12 @@ public final class PetWindow extends JWindow {
     }
 
     private void openMenu(boolean open) {
+        menuFrom = menuProgress;
+        menuTarget = open ? 1 : 0;
         if (open) {
             state = State.MENU;
             menuAnimStart = now;
             menuAnimating = true;
-            menuProgress = 0.001;
             Log.info("停下，摊开手展示任务入口");
         } else {
             menuAnimStart = now;
@@ -440,69 +386,8 @@ public final class PetWindow extends JWindow {
 
     // ------------------------------------------------------------- 形状
 
-    /**
-     * 动作范围包络：把角色在几个极限姿态下各渲染一次，取所有不透明像素的并集。
-     * 静态形状，不需要每帧重算，也不会在倾斜/甩灯/迈步时把角色切掉。
-     */
-    private Shape buildEnvelopeShape() {
-        Area area = new Area();
-        double[][] poses = {
-                {TILT_ENVELOPE, STAFF_ENVELOPE},
-                {-TILT_ENVELOPE, -STAFF_ENVELOPE},
-                {TILT_ENVELOPE, -STAFF_ENVELOPE},
-                {-TILT_ENVELOPE, STAFF_ENVELOPE},
-                {REST_LEAN, PLACED_LEAN},
-        };
-        for (double[] pose : poses) {
-            for (boolean flip : new boolean[]{false, true}) {
-                BufferedImage frame = new BufferedImage(windowW, windowH, BufferedImage.TYPE_INT_ARGB);
-                Graphics2D g = frame.createGraphics();
-                g.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
-                        RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
-                g.translate(groundX, groundY);
-                renderRig(g, pose[0], pose[1], 0, 0, flip, 0);
-                g.dispose();
-                addAlphaTo(area, frame);
-            }
-        }
-        // 放下提灯后的姿态
-        for (boolean flip : new boolean[]{false, true}) {
-            BufferedImage frame = new BufferedImage(windowW, windowH, BufferedImage.TYPE_INT_ARGB);
-            Graphics2D g = frame.createGraphics();
-            g.translate(groundX, groundY);
-            renderRig(g, REST_LEAN, 0, 1, 0, flip, 0);
-            g.dispose();
-            addAlphaTo(area, frame);
-        }
-        Log.info("窗口裁剪包络生成完成：" + poses.length * 2 + 2 + " 个姿态");
-        return area;
-    }
-
-    /** 逐行取不透明像素的连续段，并向外扩 halo 像素，避免边缘被切。 */
-    private void addAlphaTo(Area area, BufferedImage img) {
-        int halo = (int) Math.round(3 * dpiScale);
-        int w = img.getWidth();
-        int h = img.getHeight();
-        for (int y = 0; y < h; y++) {
-            int start = -1;
-            for (int x = 0; x < w; x++) {
-                boolean solid = (img.getRGB(x, y) >>> 24) > 8;
-                if (solid && start < 0) {
-                    start = x;
-                }
-                if (start >= 0 && (!solid || x == w - 1)) {
-                    int end = solid ? x : x - 1;
-                    area.add(new Area(new Rectangle2D.Double(
-                            Math.max(0, start - halo), Math.max(0, y - halo),
-                            end - start + 1 + halo * 2, 1 + halo * 2)));
-                    start = -1;
-                }
-            }
-        }
-    }
-
     private void applyShape() {
-        Area area = new Area(envelopeShape);
+        Area area = animation.shape(groundX, groundY, SPRITE_SCALE, mirrored);
         if (menuProgress > 0.02) {
             for (int i = 0; i < MENU_ANGLES.length; i++) {
                 Point c = buttonCenter(i);
@@ -510,6 +395,13 @@ public final class PetWindow extends JWindow {
                 area.add(new Area(new Ellipse2D.Double(c.x - d / 2, c.y - d / 2, d, d)));
             }
         }
+        // 文本和阴影也属于可见窗口；不再依赖旧身体包络意外包含它们。
+        double shadowW = spriteW * 0.78;
+        area.add(new Area(new Ellipse2D.Double(groundX - shadowW / 2, groundY - 7 * dpiScale,
+                shadowW, 14 * dpiScale)));
+        if (restAmount > 0.3) area.add(new Area(new Rectangle2D.Double(
+                groundX + 10 * dpiScale, groundY - spriteH - 40 * dpiScale, 66 * dpiScale, 75 * dpiScale)));
+        if (bubble != null) area.add(new Area(bubbleBounds()));
         try {
             setShape(area);
         } catch (Exception e) {
@@ -539,8 +431,7 @@ public final class PetWindow extends JWindow {
     }
 
     private boolean bodyAt(Point p) {
-        return p.x > groundX - spriteW * 0.55 && p.x < groundX + spriteW * 0.55
-                && p.y > groundY - spriteH - 8 && p.y < groundY + 8;
+        return animation.hit(p.x + 0.5, p.y + 0.5, groundX, groundY, SPRITE_SCALE, mirrored);
     }
 
     // ------------------------------------------------------------- 绘制
@@ -555,23 +446,13 @@ public final class PetWindow extends JWindow {
             g.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING,
                     RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
 
-            double tilt = currentTilt();
-            double bob = currentBob();
-            double legSwing = state == State.WALK
-                    ? Math.toRadians(13) * Math.sin(walkPhase) * speedFactor : 0;
-            double lift = state == State.WALK ? 5 * dpiScale * speedFactor : 0;
-            double staffAngle = staffPlace > 0.05 ? 0 : pendulum.angle();
-
             // 影子
             double shadowW = spriteW * 0.78;
             g.setColor(new Color(20, 25, 45, 62));
             g.fill(new Ellipse2D.Double(groundX - shadowW / 2, groundY - 7 * dpiScale,
                     shadowW, 14 * dpiScale));
 
-            Graphics2D g2 = (Graphics2D) g.create();
-            g2.translate(groundX, groundY + bob);
-            renderRig(g2, tilt, staffAngle, staffPlace, legSwing, mirrored, lift);
-            g2.dispose();
+            animation.draw(g, groundX, groundY, SPRITE_SCALE, mirrored);
 
             drawMenu(g);
             if (restAmount > 0.3) {
@@ -582,66 +463,6 @@ public final class PetWindow extends JWindow {
             }
             g.dispose();
         }
-    }
-
-    /**
-     * 画出角色。传入的姿态参数都可以独立指定，这样同一套代码既能画实时画面，
-     * 也能在启动时渲染极限姿态用来生成窗口形状。
-     *
-     * @param tilt      整体倾斜（度）
-     * @param staffAngle 提灯相对身体的摆角（度）
-     * @param place     提灯放下程度 0–1
-     * @param legSwing  双腿前后摆角（弧度）
-     * @param flip      是否水平镜像
-     * @param lift      抬脚高度（设备像素）
-     */
-    private void renderRig(Graphics2D g, double tilt, double staffAngle, double place,
-                           double legSwing, boolean flip, double lift) {
-        Graphics2D g2 = (Graphics2D) g.create();
-        g2.rotate(Math.toRadians(tilt));
-        if (flip) {
-            g2.scale(-1, 1);
-        }
-
-        for (int i = 0; i < 2; i++) {
-            Point origin = rig.legOrigin(i);
-            double lx = (origin.x - rig.width() / 2.0) * SPRITE_SCALE;
-            double ly = (origin.y - rig.height()) * SPRITE_SCALE;
-            double px = (rig.hip(i).x - rig.width() / 2.0) * SPRITE_SCALE;
-            double py = (rig.hip(i).y - rig.height()) * SPRITE_SCALE;
-            double angle = i == 0 ? legSwing : -legSwing;
-            double footLift = Math.max(0, Math.sin(i == 0 ? walkPhase : walkPhase + Math.PI)) * lift;
-            Graphics2D g3 = (Graphics2D) g2.create();
-            g3.rotate(angle, px, py);
-            drawScaled(g3, rig.leg(i), lx, ly - footLift);
-            g3.dispose();
-        }
-
-        drawScaled(g2, rig.body(), -spriteW / 2.0, -spriteH);
-
-        Point origin = rig.staffOrigin();
-        double localX = (origin.x - rig.width() / 2.0) * SPRITE_SCALE;
-        double localY = (origin.y - rig.height()) * SPRITE_SCALE;
-        double gripX = (rig.grip().x - rig.width() / 2.0) * SPRITE_SCALE;
-        double gripY = (rig.grip().y - rig.height()) * SPRITE_SCALE;
-        // 提灯底部在本地坐标里的位置（放在地上时绕它旋转）
-        double footX = (rig.staffFoot().x - rig.width() / 2.0) * SPRITE_SCALE;
-        double footY = (rig.staffFoot().y - rig.height()) * SPRITE_SCALE;
-
-        double pivotX = gripX + (footX - gripX) * place;
-        double pivotY = gripY + (footY - gripY) * place;
-        double angle = staffAngle * (1 - place) + PLACED_LEAN * place;
-        Graphics2D g4 = (Graphics2D) g2.create();
-        g4.translate(PLACED_DX * place, 0);
-        g4.rotate(Math.toRadians(angle), pivotX, pivotY);
-        drawScaled(g4, rig.staff(), localX, localY);
-        g4.dispose();
-        g2.dispose();
-    }
-
-    private void drawScaled(Graphics2D g, BufferedImage img, double x, double y) {
-        g.drawImage(img, (int) Math.round(x), (int) Math.round(y),
-                img.getWidth() * SPRITE_SCALE, img.getHeight() * SPRITE_SCALE, null);
     }
 
     private void drawSleepMarks(Graphics2D g) {
@@ -687,18 +508,24 @@ public final class PetWindow extends JWindow {
         }
     }
 
-    private void drawBubble(Graphics2D g) {
-        g.setFont(new Font("Microsoft YaHei", Font.PLAIN, fontSize));
-        FontMetrics fm = g.getFontMetrics();
-        int padX = (int) Math.round(12 * dpiScale);
-        int w = fm.stringWidth(bubble) + padX * 2;
+    private Rectangle2D bubbleBounds() {
+        FontMetrics fm = getFontMetrics(new Font("Microsoft YaHei", Font.PLAIN, fontSize));
+        int w = fm.stringWidth(bubble) + (int) Math.round(24 * dpiScale);
         int h = fm.getHeight() + (int) Math.round(8 * dpiScale);
         int x = Math.min(Math.max(4, groundX - w / 2), windowW - w - 4);
         int y = Math.max(4, chestY - menuRadius - h - 6);
+        return new Rectangle2D.Double(x, y, w, h);
+    }
+
+    private void drawBubble(Graphics2D g) {
+        g.setFont(new Font("Microsoft YaHei", Font.PLAIN, fontSize));
+        FontMetrics fm = g.getFontMetrics();
+        Rectangle2D r = bubbleBounds();
         g.setColor(new Color(0x23263A));
-        g.fill(new RoundRectangle2D.Double(x, y, w, h, 12, 12));
+        g.fill(new RoundRectangle2D.Double(r.getX(), r.getY(), r.getWidth(), r.getHeight(), 12, 12));
         g.setColor(new Color(0xF7F9FF));
-        g.drawString(bubble, x + padX, y + (h - fm.getHeight()) / 2 + fm.getAscent());
+        g.drawString(bubble, (int) r.getX() + (int) Math.round(12 * dpiScale),
+                (int) (r.getY() + (r.getHeight() - fm.getHeight()) / 2 + fm.getAscent()));
     }
 
     // ------------------------------------------------------------- 交互
@@ -788,7 +615,6 @@ public final class PetWindow extends JWindow {
             wakeUp(true);
             pendingMenu = true;
         } else {
-            pendulum.kick(1.8);
             openMenu(true);
         }
     }
@@ -796,6 +622,7 @@ public final class PetWindow extends JWindow {
     private void showBubble(String text) {
         bubble = text;
         bubbleUntil = now + 2400;
+        applyShape();
         repaint();
     }
 
@@ -818,7 +645,7 @@ public final class PetWindow extends JWindow {
     private void installPopupMenu(javax.swing.JComponent panel) {
         javax.swing.JPopupMenu menu = new javax.swing.JPopupMenu();
         javax.swing.JMenuItem about = new javax.swing.JMenuItem("关于桌宠");
-        about.addActionListener(e -> showBubble("桌宠 v0.3 · 会走路的版本"));
+        about.addActionListener(e -> showBubble("桌宠 v0.4 · 分层骨骼动画"));
         javax.swing.JMenuItem rest = new javax.swing.JMenuItem("让她休息");
         rest.addActionListener(e -> enterRest());
         javax.swing.JMenuItem quit = new javax.swing.JMenuItem("退出");
@@ -849,7 +676,7 @@ public final class PetWindow extends JWindow {
             return;
         }
         try {
-            Image icon = rig.body().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
+            Image icon = rig.reference().getScaledInstance(16, 16, Image.SCALE_SMOOTH);
             PopupMenu popup = new PopupMenu();
             MenuItem showItem = new MenuItem("显示 / 隐藏");
             showItem.addActionListener(e -> setVisible(!isVisible()));

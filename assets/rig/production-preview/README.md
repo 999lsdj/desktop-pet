@@ -1,0 +1,16 @@
+# 正式分层动画验证
+
+本目录由 `tools/package-production-evidence.py` 打包，使用与 `PetWindow` 相同的 `PetAnimation` 求值器及 `q-chibi-refined` 素材。没有启动桌宠窗口。
+
+- `walk.gif`：约 12° 髋摆幅与左右交替支撑，连续三个周期。
+- `pause.gif`：停步后六秒的衣发衰减；不是一个首尾相接的循环动作。
+- `sway.gif`、`stumble.gif`、`rest.gif`、`menu.gif`：正式求值器接收相应离屏场景输入。
+- `states.png`：六状态关键帧；`extremes.png`：26 个关节端点和一个放杖后的备用张开掌心姿态。
+- `legs.png`：当前步态八相位；`gait-history-comparison.png`：上方为历史预览，下方为当前接地步态。
+- `self-test.json`：2161 相位、支撑高度、脚掌方向、对称步幅与柔性衰减检查。
+- `report.json`：场景帧数、留边和离屏光栅耗时；不代表完整桌面帧率。
+- `binding.json`：素材原始 SHA、源码 CRLF 转 LF 后的 UTF-8 SHA、产物 SHA 及验收边界。
+
+稳定支撑高度和脚掌方向误差接近 0，左右踝横向行程均为 9.507 原生像素；实际髋半行程为 11.672° / 12.430°。起停采用渐变，不据此声称所有过渡严格锁地。
+
+`runtime_integrated:true` 表示代码接入，素材包的 `runtime_ready:false` 表示人工放行尚未完成。仍待用户复核腿部观感、交叉遮挡、隐藏材质，补足组合动作、桌面裁切与命中实测。完整拎起和招手循环尚未实现，备用掌心姿态不算招手完成。旧 draft/motion-preview 是历史证据，不能覆盖本目录的当前源码绑定。

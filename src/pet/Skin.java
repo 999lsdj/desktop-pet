@@ -33,6 +33,10 @@ public final class Skin {
     private final double[][] vertexWeights;
     private final boolean jointChain;
     private final Point2D.Double[] jointPivots;
+    private String hipParent;
+    private AffineTransform hipParentInverse;
+    private final AffineTransform hipTransfer = new AffineTransform();
+    private Point2D.Double hipPivot;
     private double lastUpdateMs;
 
     public Skin(BufferedImage image, Skeleton skeleton, int cols, int rows, double falloffPx) {
@@ -82,6 +86,12 @@ public final class Skin {
         jointPivots = new Point2D.Double[n];
         if (jointChain) assignJointWeights();
         else assignWeights(falloffPx);
+        if (jointChain && boneNames[0].startsWith("thigh") && skeleton.bone(boneNames[0]).parent != null) {
+            hipParent = skeleton.bone(boneNames[0]).parent;
+            hipPivot = restStart(0);
+            try { hipParentInverse = skeleton.bone(hipParent).restWorld().createInverse(); }
+            catch (java.awt.geom.NoninvertibleTransformException e) { throw new IllegalArgumentException(e); }
+        }
     }
 
     /** 腿部只在相邻关节附近混合，防止短小腿把脚踝的影响传回膝盖。 */
@@ -213,9 +223,27 @@ public final class Skin {
             transfer[b].setTransform(skeleton.bone(boneNames[b]).world());
             transfer[b].concatenate(restInverse[b]);
         }
+        if (hipParent != null) {
+            hipTransfer.setTransform(skeleton.bone(hipParent).world());
+            hipTransfer.concatenate(hipParentInverse);
+        }
         for (int i = 0; i < srcX.length; i++) {
             double x = srcX[i];
             double y = srcY[i];
+            if (hipParent != null && y < hipPivot.y + 3) {
+                // 短裤和腿环在同张贴图：髋以上锁躯干，髋下三像素平滑交给腿。
+                double weight = Math.max(0, Math.min(1, (y - hipPivot.y + 1) / 4));
+                weight = weight * weight * (3 - 2 * weight);
+                double a = Math.atan2(hipTransfer.getShearY(), hipTransfer.getScaleX());
+                double b = Math.atan2(transfer[0].getShearY(), transfer[0].getScaleX());
+                double angle = a + weight * Math.atan2(Math.sin(b - a), Math.cos(b - a));
+                Point2D.Double pivot = new Point2D.Double();
+                hipTransfer.transform(hipPivot, pivot);
+                double cos = Math.cos(angle), sin = Math.sin(angle);
+                mesh.setVertex(i, pivot.x + cos * (x - hipPivot.x) - sin * (y - hipPivot.y) - originX,
+                        pivot.y + sin * (x - hipPivot.x) + cos * (y - hipPivot.y) - originY);
+                continue;
+            }
             double sx = 0;
             double sy = 0;
             int[] bones = vertexBones[i];

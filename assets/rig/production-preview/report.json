@@ -1,0 +1,13 @@
+{
+  "driver":"PetAnimation (same as PetWindow)",
+  "desktop_window_started":false,
+  "user_visual_acceptance":false,
+  "modes":{
+    "walk":{"frames":144,"frame_seconds":0.020213637,"fits":true,"raster_mean_ms":3.272,"raster_max_ms":5.934,"flex_peak_deg":5.990},
+    "pause":{"frames":144,"frame_seconds":0.041666667,"fits":true,"raster_mean_ms":3.549,"raster_max_ms":7.318,"flex_peak_deg":5.990},
+    "sway":{"frames":144,"frame_seconds":0.041666667,"fits":true,"raster_mean_ms":4.811,"raster_max_ms":7.384,"flex_peak_deg":3.749},
+    "stumble":{"frames":144,"frame_seconds":0.041666667,"fits":true,"raster_mean_ms":4.889,"raster_max_ms":6.987,"flex_peak_deg":6.000},
+    "rest":{"frames":144,"frame_seconds":0.041666667,"fits":true,"raster_mean_ms":4.501,"raster_max_ms":9.085,"flex_peak_deg":0.000},
+    "menu":{"frames":144,"frame_seconds":0.041666667,"fits":true,"raster_mean_ms":1.061,"raster_max_ms":2.402,"flex_peak_deg":0.000}
+  }
+}

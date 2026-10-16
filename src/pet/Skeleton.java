@@ -32,6 +32,7 @@ public final class Skeleton {
         private final AffineTransform world = new AffineTransform();
         /** 静止姿态下的世界变换，蒙皮拿它算"这根骨头把顶点搬了多远"。 */
         private final AffineTransform restWorld = new AffineTransform();
+        private AffineTransform overrideWorld;
 
         private Bone(String name, String parent, double offsetX, double offsetY,
                      double restAngleDeg, double lengthPx) {
@@ -59,6 +60,8 @@ public final class Skeleton {
 
     private final Map<String, Bone> bones = new LinkedHashMap<>();
     private final List<Bone> order = new ArrayList<>();
+    private double translateX;
+    private double translateY;
 
     private Skeleton() {
     }
@@ -183,9 +186,13 @@ public final class Skeleton {
     /** 重算整棵树。骨头不多（十来根），每帧全算一遍比增量更新省事也更不容易错。 */
     public void update() {
         for (Bone b : order) {
+            if (b.overrideWorld != null) {
+                b.world.setTransform(b.overrideWorld);
+                continue;
+            }
             AffineTransform t = new AffineTransform();
             if (b.parent == null) {
-                t.translate(b.offsetX, b.offsetY);
+                t.translate(b.offsetX + translateX, b.offsetY + translateY);
             } else {
                 t.concatenate(bones.get(b.parent).world);
                 t.translate(b.offsetX, b.offsetY);
@@ -235,6 +242,18 @@ public final class Skeleton {
     /** 设置某根骨头相对静止姿态的追加角度。 */
     public void setDelta(String name, double deg) {
         bone(name).deltaDeg = deg;
+    }
+
+    /** 整体平移不改变绑定姿势，脚底约束用它建立轻微屈膝站姿。 */
+    public void setTranslation(double x, double y) {
+        if (!Double.isFinite(x) || !Double.isFinite(y)) throw new IllegalArgumentException("Invalid translation");
+        translateX = x;
+        translateY = y;
+    }
+
+    /** 杖落地时独立于手的世界变换；子骨仍按正常父子顺序求值。 */
+    public void overrideWorld(String name, AffineTransform transform) {
+        bone(name).overrideWorld = transform == null ? null : new AffineTransform(transform);
     }
 
     /** 把某根骨头摆到指定的世界方向（父骨要先摆好，按树的顺序调用）。 */

@@ -1,0 +1,62 @@
+{
+  "status": "production_path_integrated_pending_visual_and_desktop_acceptance",
+  "runtime_integrated": true,
+  "desktop_started": false,
+  "user_visual_acceptance": false,
+  "material_user_acceptance": false,
+  "sources": {
+    "assets/rig/q-chibi.layout.json": "d25408a1562e0ae2237f4107c97b4328e488a73fbc0d3b901a40f651f4b6708a",
+    "assets/rig/q-chibi-refined/rig.properties": "bef59ed040b07618447a82f8347784a0392959e016a5fc8ab5eee7c93e7c571a",
+    "assets/rig/q-chibi-refined/refinement-report.json": "e356449bf7ebb66001a99c34ba242768bb45944083687739ced6de854a084bd6"
+  },
+  "source_files_lf_sha256": {
+    "src/pet/BodyRig.java": "9eb46df710739c363ab21b6dc0e6aec0434346dbdb0e6845b3912168d41711fa",
+    "src/pet/ChainRig.java": "936a33442aaf4d59b2f23e0e4a607feadea3e153411abbcf86388e2713750faa",
+    "src/pet/Config.java": "8d77861336082a4e05990c8cda8b08eba8c5eb9c7aa202d380bc8aa8b31f5b24",
+    "src/pet/FullscreenWatcher.java": "8b82320271baf205134699ad73cf2cfd77b471de7304d60aafda83652b110543",
+    "src/pet/GroundedGait.java": "69da3a7e5241fc3f01acc143e562befae09c9291ba7fef0a70435a55c82b630b",
+    "src/pet/Ik.java": "cb9b2bb6a92e839df930487e958033022ccf1ef0a654c7ec8214095b2abf3bb5",
+    "src/pet/LayeredDynamics.java": "f421089596e8d3f859cd36a0d85612884d380196ecfda35efae96a2b45868379",
+    "src/pet/LayeredRig.java": "8721aafe73f48c729821cef6999c6a506fadf131cbaa33a6ee0713a5e9e0b681",
+    "src/pet/LayeredRigPreview.java": "84e397db51822d363bf1d2ca5ac8e7fdaa864df05b1bfddf4f68ccc25f7c355b",
+    "src/pet/LayeredRigSelfTest.java": "4d288d0165cb5563390b691f286e047e80260fd532d08d23df53178d7d04db8d",
+    "src/pet/Log.java": "80c970c71327c4f648936be20436a26eb74613f43a9730dbfd7ef5b0c0c18a66",
+    "src/pet/Main.java": "e6977e0b566411f9fd4cbf2c0d500aff330bb9194e35638993c7abb678383d22",
+    "src/pet/MeshWarp.java": "f8d1deb4e019bf96d6fe5af426f21da505dd6f72c7865f1298dfffcae125563b",
+    "src/pet/Pendulum.java": "90fb38e11770ff4e325ad7246c1f030cd66a657dea39ffeae4e0d75c0231e019",
+    "src/pet/PetAnimation.java": "978746d1cf43fb02e0e5b91e1c6b2b0d0f8829ce9a4be6c60e563e3a2a3076d2",
+    "src/pet/PetWindow.java": "eff094731020597c3a2c67d1de28455d23bb99389bad9c8dc6314f28aa52ba67",
+    "src/pet/PixelIcon.java": "bac72cc585f237ebbe534629fcd1441519fe9b63002e705d17c766bb03d21ea4",
+    "src/pet/ProductionAnimationPreview.java": "50013f68dc8edb2cd2a33c54b4829fe3c6188a7c6c2e83b2eff554bd208ee7ee",
+    "src/pet/ProductionAnimationSelfTest.java": "ae51f82eaaa177170537f752b712bca9df4357bf030985b099afd745699220e4",
+    "src/pet/RigPreview.java": "b14041475ccd048fc719690146b1231599d988a623c04364924afb64cc317110",
+    "src/pet/Skeleton.java": "523d2c68cb0b1dbb425577ed91d870887fa903da5eeef32981b8167fad66ca28",
+    "src/pet/Skin.java": "87d4d5708bb296ba428bd061274329d1c1ea3f38495be18af107c0f373c9e47f",
+    "src/pet/Sprite.java": "6c7e45462eca043bcf474a80e36f1dea3adc85e577598c438d3c86e1eccfebab",
+    "src/pet/VerletChain.java": "9e701ad49f0f966e11d17df63b8688121b2099b77a7dbb23d6909ef9f29d6edb",
+    "config.properties": "b98a7770c408e47e5a19a72d1e066a2a90298d5d6f08d2c215bd64351de9d1fe",
+    "tools/refine-q-rig.py": "746d449dd0bb2334abed01cb8d511ab0ea9d3aba2cbfdda95d0a2305494a6564",
+    "tools/package-production-evidence.py": "b5cd1d703288d3bf1c5d12f8bd55eb33055ad82b8fe5a5d85395b5668434c316"
+  },
+  "artifacts": {
+    "extremes.png": "f7df59723ef8d7cbd9317cc6c2bdc4e8bdb1288c950c0c69f77143d251560d3f",
+    "gait-history-comparison.png": "c11f1ca688146b3e965d41320455d79cfb98cbd7f01d6f841d5c74d67a1b70a6",
+    "legs.png": "78bdd07e68885027238669dd8a577335854e1103f754e85b2d2891bf7f4f4e87",
+    "menu.gif": "2f4f83095bf7fe27468a92f50601ab954b1ddacb06d97bec67e8eb48daad3946",
+    "pause.gif": "407b87fc88c4db24998a8dbb62f4e5cf145aec902ac440acf20b654a117efd51",
+    "report.json": "851495aa42ee0f992836737bad6ae3d941a90c9a77e3ed3cddfdecdb44162bfe",
+    "rest.gif": "24974198d9ab564392cdfd02e56e4044c65a648332c2f9f186c73fe768edc9b4",
+    "self-test.json": "fd0121ab63886ec05266c0ae159997b71e760cad0518046f06c2936bef43c6ec",
+    "states.png": "c7d256b16c15ea5a3bec08434b23ef286c8d55c2aea4d0887d94a1d35b0226d5",
+    "stumble.gif": "2020de942b77713cb12754f13d636cac22b6e0d4665cab09b290f987c3b4700c",
+    "sway.gif": "765287d8e995c08f95c85d34cfc1098cf9a94986f3d3545e7469e4963189a22e",
+    "walk.gif": "60e4af4c893dfc81c1c822c96db3e64ad91d292da33ee13495e72e3476888411"
+  },
+  "limits": [
+    "Stable stance contact is tested; startup and stopping are blended transitions.",
+    "Three walking cycles are sampled. Pause is a six-second decay, not a repeating loop.",
+    "Sway/stumble are supplied scenario inputs to the same production evaluator.",
+    "Extreme sheet covers 26 endpoints and one prepared open-palm pose, not all combined poses.",
+    "Native window, interaction, carried motion and full waving remain to be accepted."
+  ]
+}

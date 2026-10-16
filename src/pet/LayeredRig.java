@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Properties;
 import javax.imageio.ImageIO;
 
-/** A hash-checked, material-constrained rig used only by the offscreen preview. */
+/** 哈希校验的分层蒙皮；离屏验证与正式窗口共享同一绘制路径。 */
 public final class LayeredRig {
     public static final class Layer {
         public final String name;
@@ -85,6 +85,9 @@ public final class LayeredRig {
     private final BufferedImage reference;
     private double lastUpdateMs;
     private double lastDrawMs;
+    private final Map<String, Layer> variants = new HashMap<>();
+    private final Map<String, String> variantTargets = new HashMap<>();
+    private String activeVariant;
 
     private LayeredRig(int width, int height, Skeleton skeleton, List<Layer> layers,
                        BufferedImage reference) {
@@ -139,7 +142,22 @@ public final class LayeredRig {
             layers.add(new Layer(name, group, bones, image, skeleton, step, falloff, skinning));
         }
         BufferedImage reference = verifiedImage(base, properties, "reference", width, height);
-        return new LayeredRig(width, height, skeleton, layers, reference);
+        LayeredRig rig = new LayeredRig(width, height, skeleton, layers, reference);
+        if (properties.containsKey("variants")) {
+            for (String name : names(properties, "variants")) {
+                String key = "variant." + name;
+                String target = required(properties, key + ".replaces");
+                Layer original = layers.stream().filter(l -> l.name.equals(target)).findFirst()
+                        .orElseThrow(() -> new IOException("Unknown variant target: " + target));
+                List<String> bones = names(properties, key + ".bones");
+                if (!bones.equals(original.bones) || !required(properties, key + ".group").equals(original.group))
+                    throw new IOException("Variant binding differs from target: " + name);
+                rig.variants.put(name, new Layer(name, original.group, bones,
+                        verifiedImage(base, properties, key, width, height), skeleton, step, falloff, original.skinning));
+                rig.variantTargets.put(name, target);
+            }
+        }
+        return rig;
     }
 
     private static String required(Properties p, String key) throws IOException {
@@ -185,7 +203,11 @@ public final class LayeredRig {
     }
 
     public void resetPose() {
-        for (String bone : skeleton.names()) skeleton.setDelta(bone, 0);
+        skeleton.setTranslation(0, 0);
+        for (String bone : skeleton.names()) {
+            skeleton.setDelta(bone, 0);
+            skeleton.overrideWorld(bone, null);
+        }
         update();
     }
 
@@ -193,6 +215,7 @@ public final class LayeredRig {
         long start = System.nanoTime();
         skeleton.update();
         for (Layer layer : layers) layer.skin.update();
+        for (Layer layer : variants.values()) layer.skin.update();
         lastUpdateMs = (System.nanoTime() - start) / 1e6;
     }
 
@@ -208,7 +231,9 @@ public final class LayeredRig {
         long start = System.nanoTime();
         BufferedImage result = new BufferedImage(width + 2 * padding, height + 2 * padding, BufferedImage.TYPE_INT_ARGB);
         BufferedImage scratch = new BufferedImage(result.getWidth(), result.getHeight(), BufferedImage.TYPE_INT_ARGB);
-        for (Layer layer : layers) {
+        for (Layer baseLayer : layers) {
+            Layer layer = activeVariant != null && baseLayer.name.equals(variantTargets.get(activeVariant))
+                    ? variants.get(activeVariant) : baseLayer;
             if (layer.maxDisplacement() < 1e-8) {
                 composite(result, layer.image, padding, padding);
             } else {
@@ -250,7 +275,9 @@ public final class LayeredRig {
     }
 
     public boolean fits(int padding) {
-        for (Layer layer : layers) {
+        List<Layer> visible = new ArrayList<>(layers);
+        if (activeVariant != null) visible.add(variants.get(activeVariant));
+        for (Layer layer : visible) {
             MeshWarp mesh = layer.skin.mesh();
             for (int i = 0; i < mesh.vertexCount(); i++) {
                 double x = mesh.dstX(i) + layer.x, y = mesh.dstY(i) + layer.y;
@@ -262,6 +289,11 @@ public final class LayeredRig {
     }
 
     public int width() { return width; }
+    /** 备用手掌由明确动作启用，默认握杖姿势保持原样。 */
+    public void setVariant(String name) {
+        if (name != null && !variants.containsKey(name)) throw new IllegalArgumentException("Unknown variant: " + name);
+        activeVariant = name;
+    }
     public int height() { return height; }
     public Skeleton skeleton() { return skeleton; }
     public List<Layer> layers() { return layers; }
