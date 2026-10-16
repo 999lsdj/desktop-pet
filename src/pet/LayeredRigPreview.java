@@ -23,6 +23,7 @@ public final class LayeredRigPreview {
     private static final int FRAMES_PER_CYCLE = 48;
     private static final int CYCLES = 3;
     private static final String[] POSES = {"rest", "knees-ankles", "arms", "hair-sleeves-coat", "reverse-flex", "combined"};
+    private static final double[] POSE_PHASES = {0, 0, Math.PI / 2, Math.PI / 2, Math.PI / 2, Math.PI};
 
     public static void main(String[] args) throws Exception {
         System.setProperty("java.awt.headless", "true");
@@ -33,8 +34,8 @@ public final class LayeredRigPreview {
         Path output = Path.of(args[1]);
         Files.createDirectories(output.resolve("frames"));
         int padding = 16;
-        for (String pose : POSES) {
-            apply(rig, pose, Math.PI / 2);
+        for (int i = 0; i < POSES.length; i++) {
+            apply(rig, POSES[i], POSE_PHASES[i]);
             padding = Math.max(padding, requiredPadding(rig));
         }
         for (int i = 0; i < FRAMES_PER_CYCLE; i++) {
@@ -55,13 +56,13 @@ public final class LayeredRigPreview {
         Graphics2D g = sheet.createGraphics();
         g.setRenderingHint(RenderingHints.KEY_INTERPOLATION, RenderingHints.VALUE_INTERPOLATION_NEAREST_NEIGHBOR);
         for (int i = 0; i < POSES.length; i++) {
-            apply(rig, POSES[i], Math.PI / 2);
+            apply(rig, POSES[i], POSE_PHASES[i]);
             BufferedImage frame = rig.render(padding);
             int x = (i % 3) * tileWidth, y = (i / 3) * tileHeight;
             checker(g, x, y, tileWidth, tileHeight);
             g.drawImage(frame, x, y + 28, frame.getWidth() * scale, frame.getHeight() * scale, null);
             g.setColor(new Color(0x22334A));
-            g.drawString(POSES[i] + " | synthetic pose", x + 12, y + 19);
+            g.drawString(POSES[i] + " | phase " + (int) Math.toDegrees(POSE_PHASES[i]) + " deg", x + 12, y + 19);
         }
         g.dispose();
         ImageIO.write(sheet, "png", output.resolve("poses.png").toFile());
@@ -125,7 +126,9 @@ public final class LayeredRigPreview {
                 + "  \"runtime_ready\":false,\n  \"physics_acceptance\":false,\n"
                 + "  \"rig_properties_sha256\":" + quote(rigHash) + ",\n"
                 + "  \"driver\":\"periodic analytic joint angles; no inertia, IK or production state machine\",\n"
-                + "  \"leg_motion\":{\"hip_amplitude_deg\":7,\"knee_max_deg\":24,\"ankle_amplitude_deg\":4,\"mirrored_knees\":true},\n"
+                + "  \"leg_motion\":{\"hip_amplitude_deg\":12,\"knee_max_deg\":14,\"foot_world_delta_deg\":0,"
+                + "\"phase_offset_deg\":180,\"knee_driver\":\"forward recovery half-cycle\","
+                + "\"screen_left\":\"Near\",\"screen_right\":\"Far\",\"ground_contact_solved\":false},\n"
                 + "  \"rest_composition\":\"straight RGBA source-over; stationary layers bypass Java2D premultiplication\",\n"
                 + "  \"raster_limitations\":\"Java2D nearest-neighbor; rigid drawImage may differ by 1-3 pixels from triangle rasterization in tested poses; inspect seams and occlusion visually\",\n"
                 + "  \"canvas\":[" + rig.width() + "," + rig.height() + "],\n  \"padding_px\":" + padding + ",\n"
@@ -159,12 +162,18 @@ public final class LayeredRigPreview {
         boolean arms = pose.equals("arms") || pose.equals("combined");
         boolean flex = pose.contains("flex") || pose.equals("hair-sleeves-coat") || pose.equals("combined");
         if (legs) {
-            s.setDelta("thighNear", 7 * Math.sin(t)); s.setDelta("thighFar", -7 * Math.sin(t));
-            // 只在抬腿半周弯膝，落下时回直；正面投影两侧镜像，避免膝盖都向同一侧折。
-            double nearLift = Math.max(0, Math.sin(t)), farLift = Math.max(0, -Math.sin(t));
-            s.setDelta("shinNear", -24 * nearLift * nearLift);
-            s.setDelta("shinFar", 24 * farLift * farLift);
-            s.setDelta("footNear", 4 * Math.sin(t + 0.5)); s.setDelta("footFar", -4 * Math.sin(t + 0.5));
+            for (String side : List.of("Near", "Far")) {
+                double legPhase = t + (side.equals("Far") ? Math.PI : 0);
+                double hip = 12 * Math.sin(legPhase);
+                // 两腿朝同一方向迈步，相差半周期；弯膝取决于向前收腿而非髋角正负。
+                // 半波平方使抬腿与支撑交界的角速度连续，避免旧反向膝角抵消左腿步幅。
+                double recovery = Math.max(0, Math.cos(legPhase));
+                double knee = -14 * recovery * recovery;
+                s.setDelta("thigh" + side, hip);
+                s.setDelta("shin" + side, knee);
+                // 脚掌保留站姿方向；不让髋、膝旋转叠加到靴子上形成向内折入。
+                s.setDelta("foot" + side, -hip - knee);
+            }
         }
         if (arms) {
             s.setDelta("upperArm", 15 * Math.sin(t)); s.setDelta("foreArm", -21 * Math.sin(t + 0.4));

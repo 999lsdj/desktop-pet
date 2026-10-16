@@ -97,22 +97,67 @@ public final class LayeredRigSelfTest {
                 throw new AssertionError("leg bundle did not enable joint-local skinning");
         }
         double maxHip = 0, maxKnee = 0;
+        double[] minX = {Double.POSITIVE_INFINITY, Double.POSITIVE_INFINITY};
+        double[] maxX = {Double.NEGATIVE_INFINITY, Double.NEGATIVE_INFINITY};
         for (int i = 0; i <= 720; i++) {
             double phase = i * Math.PI * 2 / 720;
             LayeredRigPreview.apply(rig, "knees-ankles", phase);
             for (String side : List.of("Near", "Far")) {
                 double hip = rig.skeleton().bone("thigh" + side).deltaDeg();
                 double knee = rig.skeleton().bone("shin" + side).deltaDeg();
+                // A visible boot must not inherit the sum of hip and knee rotations.
+                double footTilt = rig.skeleton().worldAngleDeg("foot" + side) - 90;
+                if (!Double.isFinite(footTilt) || Math.abs(footTilt) > 1e-7)
+                    throw new AssertionError("boot tilts inward during step: " + side + " " + footTilt);
+                int index = side.equals("Near") ? 0 : 1;
+                double x = rig.skeleton().start("foot" + side).x;
+                minX[index] = Math.min(minX[index], x); maxX[index] = Math.max(maxX[index], x);
                 maxHip = Math.max(maxHip, Math.abs(hip)); maxKnee = Math.max(maxKnee, Math.abs(knee));
-                if (!Double.isFinite(hip) || Math.abs(hip) > 7.000001 || !Double.isFinite(knee)
-                        || Math.abs(knee) > 24.000001 || (side.equals("Near") ? knee > 0 : knee < 0))
-                    throw new AssertionError("leg exceeds requested range or bends inward: " + side);
-                if (hip <= 0) near(knee, 0, "planted leg stays bent");
+                if (!Double.isFinite(hip) || Math.abs(hip) > 12.000001 || !Double.isFinite(knee)
+                        || knee < -14.000001 || knee > 0)
+                    throw new AssertionError("leg exceeds requested range: " + side);
+            }
+            double nearKnee = rig.skeleton().bone("shinNear").deltaDeg();
+            double farKnee = rig.skeleton().bone("shinFar").deltaDeg();
+            if (nearKnee < -1e-8 && farKnee < -1e-8)
+                throw new AssertionError("both knees flex together instead of alternating");
+        }
+        double nearStride = maxX[0] - minX[0], farStride = maxX[1] - minX[1];
+        if (nearStride < 9 || farStride < 9 || Math.max(nearStride, farStride) / Math.min(nearStride, farStride) > 1.15)
+            throw new AssertionError("unequal or invisible steps: " + nearStride + " / " + farStride);
+        near(maxHip, 12, "hip amplitude"); near(maxKnee, 14, "knee range");
+        // Both legs travel forward in the same screen direction, half a cycle apart.
+        LayeredRigPreview.apply(rig, "knees-ankles", 0);
+        if (rig.skeleton().bone("shinNear").deltaDeg() > -10)
+            throw new AssertionError("left leg fails to bend during forward recovery");
+        near(rig.skeleton().bone("shinFar").deltaDeg(), 0, "right support knee");
+        LayeredRigPreview.apply(rig, "knees-ankles", Math.PI);
+        if (rig.skeleton().bone("shinFar").deltaDeg() > -10)
+            throw new AssertionError("right leg fails to bend during forward recovery");
+        near(rig.skeleton().bone("shinNear").deltaDeg(), 0, "left support knee");
+        testLegPhaseContinuity(rig);
+        rig.resetPose();
+        System.out.printf(java.util.Locale.ROOT,
+                "PASS: 721 phases; +/-12 hip, alternating recovery, upright boots; ankle strides %.3f / %.3f px%n",
+                nearStride, farStride);
+    }
+
+    private static void testLegPhaseContinuity(LayeredRig rig) {
+        double epsilon = 1e-5;
+        for (double phase : new double[]{0, Math.PI / 2, Math.PI, Math.PI * 1.5, Math.PI * 2}) {
+            for (String bone : List.of("shinNear", "shinFar", "footNear", "footFar")) {
+                LayeredRigPreview.apply(rig, "knees-ankles", phase - epsilon);
+                var before = rig.skeleton().tip(bone);
+                LayeredRigPreview.apply(rig, "knees-ankles", phase);
+                var at = rig.skeleton().tip(bone);
+                LayeredRigPreview.apply(rig, "knees-ankles", phase + epsilon);
+                var after = rig.skeleton().tip(bone);
+                double jump = Math.hypot(after.x - 2 * at.x + before.x,
+                        after.y - 2 * at.y + before.y) / epsilon;
+                if (!Double.isFinite(jump) || jump > 0.002)
+                    throw new AssertionError("step velocity jumps at recovery/loop boundary: " + bone);
             }
         }
-        near(maxHip, 7, "hip amplitude"); near(maxKnee, 24, "knee range");
-        rig.resetPose();
-        System.out.println("PASS: 721 leg phases stay within +/-7 hip and 24 knee, with mirrored bend");
     }
 
     private static void testSlantedKnees() {

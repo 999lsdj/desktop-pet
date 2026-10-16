@@ -4,12 +4,15 @@
   "inpaint_report_sha256": "09f714597c242ea7e554762fb7924dfdf432066c23845684ccbacd0c459ec028",
   "files_sha256": {
     "knee-comparison.png": "7bffbab591a388070554f0b515f6e72a030be7a87a021335727b5d62dca67ab3",
-    "poses.png": "d77e177a7a83d1105411ea49e15b79dc342e55749438bb35b0796635cc1d4187",
-    "preview.gif": "06375098d5906c1a9c55b821608888a7ef35b0e5ebf56d53ad3e3b2d619ba5bb",
+    "poses.png": "30f8ff87bb208f172ebfba6b92450b356219206a5e405e9631b7c0d88288c4e5",
+    "preview.gif": "87cded65cdcab6881feb7ac8e7a997c0e5882ab119d5159e85ba0875d2a28373",
     "repeat-report.json": "d3e90bad0d35527c3cb5cc78c723700f5ce6e28a29486a44100381f3bd0876b9",
-    "report.json": "dc3e890faed6f1b2d83c1c30a68687bb1e043b7dc09f22a95a1b007a1f20e409",
+    "report.json": "7c2976b916ba96b1579a5a3bdcec41ec2fae3160287098ccde624aa42409f976",
     "rest.png": "f45fd370ce990bbdf26bd0bf7cfa3b9a7f7f0fd21005dc50d755279f750dc4ab",
-    "rig.properties": "faa7a30f05703c06a3a4af8603f0fecb6a942be4fd5095a91f24553590abfd15"
+    "rig.properties": "faa7a30f05703c06a3a4af8603f0fecb6a942be4fd5095a91f24553590abfd15",
+    "gait-before-report.json": "dc3e890faed6f1b2d83c1c30a68687bb1e043b7dc09f22a95a1b007a1f20e409",
+    "gait-comparison.png": "b683daaddeece33548d31d87ba634e4d4eb209b59acdbcfeefa3291867584054",
+    "gait-comparison.gif": "1e8860575a2af1d896b26b86bcfd3c227065ab44d4380ace3bcb8b7e79facb76"
   },
   "driver": "synthetic periodic joint angles",
   "runtime_ready": false,
@@ -20,10 +23,11 @@
       "髋部抬腿时出现黑色拉伸与遮挡不自然",
       "隐藏发丝颜色与轮廓仍须精修",
       "张开手掌尚未制作",
+      "新版腿部观感待用户复核；支撑脚锁地与自然步态尚未实现",
       "未接入正式待机、踱步或Verlet链"
     ]
   },
-  "preview_evidence_dir": "_tmp/knee-fix/after",
+  "preview_evidence_dir": "_tmp/gait-fix/after",
   "knee_fix": {
     "hip_amplitude_before_deg": 17,
     "hip_amplitude_after_deg": 7,
@@ -33,6 +37,50 @@
     "knee_width_before_px": 7.651734,
     "knee_width_reference_px": 8,
     "regression": "ankle-knee isolation; vertical fixture 8px section through -45..45 degrees; actual slanted knees within 1% width through -24..24 degrees",
-    "pose_samples": 721
+    "pose_samples": 721,
+    "historical_baseline_only": true
+  },
+  "gait_revision": {
+    "date": "2026-10-16",
+    "baseline_commit": "2eda82a",
+    "before": {
+      "Near": {
+        "screen_side": "left",
+        "ankle_x_span_px": 3.865053000000003,
+        "max_abs_foot_world_delta_deg": 13.48967
+      },
+      "Far": {
+        "screen_side": "right",
+        "ankle_x_span_px": 11.311937,
+        "max_abs_foot_world_delta_deg": 34.51033
+      }
+    },
+    "after": {
+      "Near": {
+        "screen_side": "left",
+        "ankle_x_span_px": 11.227230999999996,
+        "max_abs_foot_world_delta_deg": 1.0000000011667343e-06
+      },
+      "Far": {
+        "screen_side": "right",
+        "ankle_x_span_px": 11.227230999999996,
+        "max_abs_foot_world_delta_deg": 1.0000000011667343e-06
+      }
+    },
+    "hip_amplitude_deg": 12,
+    "knee_peak_deg": 14,
+    "phase_offset_deg": 180,
+    "foot_orientation": "rest world direction",
+    "ground_contact_solved": false,
+    "user_visual_acceptance": "pending",
+    "notes": "步态驱动诊断修正；不代表正式自然踱步、地面支撑或PetWindow验收完成。"
+  },
+  "source_hash_normalization": "UTF-8; CRLF to LF; preserve other bytes",
+  "source_files_lf_sha256": {
+    "src/pet/LayeredRigPreview.java": "84e397db51822d363bf1d2ca5ac8e7fdaa864df05b1bfddf4f68ccc25f7c355b",
+    "src/pet/LayeredRigSelfTest.java": "4d288d0165cb5563390b691f286e047e80260fd532d08d23df53178d7d04db8d",
+    "src/pet/Skin.java": "cf82ff3a059336337f3d3f5477d5de62304efba0cffb185fb855a46050faf240",
+    "src/pet/LayeredRig.java": "2a530e51a7045efe70e4964ad3677783b1608a8fb986a83b4c1c0ca016aa5a37",
+    "tools/export-q-rig.py": "f3ea15f19247c9ce571e72d8dfe25da452622da46198a51b57740fb52cdeef50"
   }
 }
