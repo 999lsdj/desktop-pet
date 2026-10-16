@@ -54,11 +54,14 @@ public final class FullscreenWatcher {
                                 // 忽略异常行
                             }
                         } else if (value.contains("FULLSCREEN")) {
-                            fullscreen.set(true);
-                            Log.info("检测到全屏程序，桌宠让路");
+                            if (!fullscreen.getAndSet(true)) {
+                                Log.info("检测到全屏程序，桌宠让路");
+                            }
                         } else if (value.contains("NORMAL")) {
-                            fullscreen.set(false);
-                            Log.info("全屏程序已退出，桌宠恢复");
+                            // 首次轮询总是报一次 NORMAL，只有真的从全屏退出才记一行
+                            if (fullscreen.getAndSet(false)) {
+                                Log.info("全屏程序已退出，桌宠恢复");
+                            }
                         }
                     }
                 }

@@ -310,8 +310,9 @@ public final class PetWindow extends JWindow {
         applyShape();
         if (now >= nextAnimationLog) {
             Log.info(String.format(java.util.Locale.ROOT,
-                    "分层动画 state=%s phase=%.3f blend=%.3f eval=%.3fms raster=%.3fms",
-                    state, animation.phase(), animation.walkBlend(), rig.lastUpdateMs(), rig.lastDrawMs()));
+                    "分层动画 state=%s phase=%.3f blend=%.3f 位置=(%d,%d) eval=%.3fms raster=%.3fms",
+                    state, animation.phase(), animation.walkBlend(), getX(), getY(),
+                    rig.lastUpdateMs(), rig.lastDrawMs()));
             nextAnimationLog = now + 5000;
         }
         repaint();
@@ -583,6 +584,10 @@ public final class PetWindow extends JWindow {
                 int idx = buttonAt(e.getPoint());
                 boolean body = bodyAt(e.getPoint());
                 if (idx != hoverIndex || body != hoverBody) {
+                    if (body != hoverBody) {
+                        Log.info(body ? "悬停命中角色，光标切换为手型"
+                                : "鼠标移出角色，光标恢复默认");
+                    }
                     hoverIndex = idx;
                     hoverBody = body;
                     repaint();
