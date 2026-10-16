@@ -156,7 +156,7 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
 
     subtitle = doc.add_paragraph()
     subtitle.paragraph_format.space_after = Pt(14)
-    run = subtitle.add_run("记录计划、过程与结果  更新于 2026-10-16  素材精修与正式动画接入")
+    run = subtitle.add_run("记录计划、过程与结果  更新于 2026-10-16  素材精修与正式动画接入 · 循环与极限摆位验收")
     set_run(run, size=10.5)
 
     body(doc,
@@ -730,6 +730,40 @@ def build(out_path, figure_path, mesh_figure_path="", skeleton_figure_path="", p
              "技术接入和人工放行分开记录；还要复核腿部交叉遮挡与膝踝轮廓、隐藏材质与组合动作，"
              "继续拎起悬挂、完整放杖招手循环，以及窗口裁切、命中和端到端验收。"
              "六状态动画、原始报告与源码绑定位于 assets/rig/production-preview；本轮同步不勾选最终收尾任务 9.4。")
+
+        loops = metrics["loop_continuity"]
+        envelope = json.loads((production / 'report.json').read_text(encoding='utf-8'))
+        walk, sway = loops["walk"], loops["sway"]
+        heading(doc, "十七 循环连续性与极限摆位验收")
+        body(doc,
+             "同一轮里补上了两项可以用命令复跑的验收。循环连续性用与窗口相同的求值器，"
+             "把踱步和微醺摇摆各连播三轮，每轮固定 120 帧、步长取周期的 1/120，"
+             "让三轮的相位点严格对齐，然后比较：同一相位上的姿势是否重复、"
+             "以及跨过循环交界的那一帧位移有没有突然变大。")
+        make_table(doc, ['检查项', '结果'], [
+            ['踱步三轮交界',
+             f'轮内最大单帧位移 {walk["max_interior_step_px"]:.3f} 原生像素，交界帧 {walk["max_boundary_step_px"]:.3f}；同相位姿势重复误差 {walk["same_phase_repeat_error_px"]:.1e} 像素'],
+            ['摇摆三轮交界',
+             f'轮内最大单帧位移 {sway["max_interior_step_px"]:.3f} 原生像素，交界帧 {sway["max_boundary_step_px"]:.3f}；同相位姿势重复误差 {sway["same_phase_repeat_error_px"]:.1e} 像素'],
+            ['极限摆位留边',
+             f'{envelope["envelope_poses_checked"]} 个姿势，可见区域离画布边最近 {envelope["envelope_min_margin_native_px"]} 原生像素，没有部件被切到'],
+        ], widths=[3.3,11.7])
+        body(doc,
+             "两个数字都指向同一件事：交界帧的位移比轮内峰值更小，三轮同一相位的姿势误差只有约一万亿分之一像素，"
+             "所以循环处既没有跳变、也没有逐轮漂移。自检另外要求轮内确实在动，"
+             "避免一个静止不动的动作也算通过。摆位检查覆盖 6 个动作各 144 帧、"
+             "13 个关节的正负极限共 26 个端点，以及备用张开掌心的绑定姿态；窗口形状仍由当帧可见像素生成，"
+             "所以包络之外的空白既不会被挡住也不接收点击。")
+        body(doc,
+             "本轮没有改动渲染代码。重新生成证据时 144 帧图像与六段 GIF 逐字节不变，"
+             "只有报告与绑定哈希更新，说明新判定没有改变画面。命中判定也补了一个菜单姿态的验证："
+             "手臂抬出身体轮廓时，最外侧的可见像素判定命中，紧邻的空白不命中。"
+             "桌面上的悬停光标反馈还要实机确认，所以命中任务保持未完成。")
+        body(doc,
+             "待机动作本身仍有一处需要你决定：config.properties 里的 sway.tilt.deg 与 stumble.tilt.deg "
+             "在 2026 年 10 月 13 日按当时的要求设成了 0，也就是微醺摇摆与偶发踉跄在实机上不会出现，"
+             "而本轮规格要求这两项保留可观察表现。本轮没有擅自改回，等你决定后再动。"
+             "此外五种待机动作需要一个实机运行才能确认日志里逐项可查，因此 4.1 也保持未完成。")
 
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     doc.save(out_path)

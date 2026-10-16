@@ -12,6 +12,10 @@ import javax.imageio.ImageIO;
 
 /** 运行 PetWindow 相同的求值和绘制器，不创建桌面窗口。 */
 public final class ProductionAnimationPreview {
+    /** 9.1：极限摆位离画布边还剩多少原生像素；0 就是被裁到。 */
+    private static int envelopeMin = Integer.MAX_VALUE;
+    private static int envelopePoses;
+
     public static void main(String[] args) throws Exception {
         Path out = Path.of(args[1]);
         Files.createDirectories(out);
@@ -45,7 +49,8 @@ public final class ProductionAnimationPreview {
                 if (walking) travel += speed * dt;
                 animation.update(dt, walking, speed, tilt, rest, mode == 5 ? 1 : 0, travel);
                 if (i < 0) continue;
-                fits &= rig.fits(PetAnimation.PADDING);
+                note(margin(animation.frame()));
+                fits &= rig.fits(PetAnimation.PADDING) && envelopeMin >= 1;
                 maxDraw = Math.max(maxDraw, rig.lastDrawMs()); sumDraw += rig.lastDrawMs();
                 maxFlex = Math.max(maxFlex, animation.flexibleMotion());
                 BufferedImage frame = new BufferedImage(w, h, BufferedImage.TYPE_INT_RGB);
@@ -71,10 +76,38 @@ public final class ProductionAnimationPreview {
         }
         page.dispose();
         ImageIO.write(sheet, "png", out.resolve("states.png").toFile());
-        report.append("\n  }\n}\n");
-        Files.writeString(out.resolve("report.json"), report, StandardCharsets.UTF_8);
+        // 极限摆位也算进包络统计，所以先跑完再写报告。
         extremes(Path.of(args[0]), out);
+        report.append("\n  },\n");
+        report.append(String.format(Locale.ROOT,
+                "  \"envelope_poses_checked\":%d,\n  \"envelope_min_margin_native_px\":%d\n}\n",
+                envelopePoses, envelopeMin));
+        Files.writeString(out.resolve("report.json"), report, StandardCharsets.UTF_8);
+        if (envelopeMin < 1) throw new AssertionError("Extreme pose clipped: margin=" + envelopeMin);
+        Log.info("极限摆位检查 " + envelopePoses + " 个姿势，最小留边 " + envelopeMin + " 原生像素");
         System.out.println(out.toAbsolutePath());
+    }
+
+    private static void note(int margin) {
+        envelopePoses++;
+        envelopeMin = Math.min(envelopeMin, margin);
+    }
+
+    /** 可见像素到画布四边的最小距离。 */
+    private static int margin(BufferedImage image) {
+        int minX = image.getWidth(), minY = image.getHeight(), maxX = -1, maxY = -1;
+        for (int y = 0; y < image.getHeight(); y++) {
+            for (int x = 0; x < image.getWidth(); x++) {
+                if ((image.getRGB(x, y) >>> 24) <= 8) continue;
+                if (x < minX) minX = x;
+                if (y < minY) minY = y;
+                if (x > maxX) maxX = x;
+                if (y > maxY) maxY = y;
+            }
+        }
+        if (maxX < 0) return 0;
+        return Math.min(Math.min(minX, minY),
+                Math.min(image.getWidth() - 1 - maxX, image.getHeight() - 1 - maxY));
     }
 
     private static void extremes(Path bundle, Path out) throws Exception {
@@ -90,9 +123,12 @@ public final class ProductionAnimationPreview {
         for (int j = 0; j < bones.length; j++) for (int edge = 0; edge < 2; edge++) {
             rig.resetPose();
             rig.skeleton().setDelta(bones[j], ranges[j][edge]); rig.update();
-            if (!rig.fits(PetAnimation.PADDING)) throw new AssertionError("Extreme clip: " + bones[j]);
+            BufferedImage posed = rig.render(PetAnimation.PADDING);
+            note(margin(posed));
+            if (!rig.fits(PetAnimation.PADDING) || envelopeMin < 1)
+                throw new AssertionError("Extreme clip: " + bones[j]);
             int i = j * 2 + edge, x = i % 6 * w, y = i / 6 * h;
-            g.drawImage(rig.render(PetAnimation.PADDING), x, y + 20, null);
+            g.drawImage(posed, x, y + 20, null);
             g.setColor(new Color(0x24354A)); g.drawString(bones[j] + " " + ranges[j][edge], x + 4, y + 15);
         }
         rig.resetPose();
@@ -100,7 +136,9 @@ public final class ProductionAnimationPreview {
         prepared.update(1.0/120, false, 0, 0, 1, 0, 0);
         rig.setVariant("handOpen");
         rig.skeleton().setDelta("upperArm", -45); rig.skeleton().setDelta("foreArm", -35); rig.update();
-        g.drawImage(rig.render(PetAnimation.PADDING), 2 * w, 4 * h + 20, null);
+        BufferedImage openHand = rig.render(PetAnimation.PADDING);
+        note(margin(openHand));
+        g.drawImage(openHand, 2 * w, 4 * h + 20, null);
         g.drawString("open hand (binding only)", 2 * w + 4, 4 * h + 15);
         g.dispose(); ImageIO.write(sheet,"png",out.resolve("extremes.png").toFile());
     }
